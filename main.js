@@ -2,7 +2,7 @@ const { Command }=require('commander');
 const http=require('http');
 const fs=require('fs');
 const path=require('path'); //файловий шлях
-const formidable = require('formidable');
+const { formidable } = require('formidable');
 //частина 2
 //база даних в памяті
 let inventory=[];
