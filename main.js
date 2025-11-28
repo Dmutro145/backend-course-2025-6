@@ -60,6 +60,11 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
   }
+   else if (url === '/inventory' && method !== 'GET') {
+  // Якщо /inventory але не GET метод - 405
+  res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('Method Not Allowed\n');
+}
 });
 
 //запускаю сервер
