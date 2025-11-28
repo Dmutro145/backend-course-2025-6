@@ -15,11 +15,11 @@ program
 .parse(process.argv);//argv-усі аргументи командного рядка
 const options=program.opts();
 
-/файл опція кеш
+//файл опція кеш
 if(!fs.existsSync(options.cache)) 
 {
   fs.mkdirSync(options.cache,{recursive: true});//recursive створи всі відсутні папки
-  console.log('створено директорію кешу: $(options.cache}');
+  console.log(`створено директорію кешу: ${options.cache}`);
 }
 
 // ств http серв
@@ -27,11 +27,12 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
                                            //- res = відповідь сервера (що він повертає).
  {
    res.writeHead(200, { 'Content-Type': 'text/plain' });//- заголовок Content-Type: text/plain 
-   res.end('Сервер працює!\n');
+   res.end(`Сервер працює!\n`);
  });
 
 //запускаю сервер
-server.listen(options.port,options.host,()=>{console.log('Сервер запущено на http://${options.host}:${options.port}');});
+server.listen(options.port,options.host,()=>{console.log(`Сервер запущено на http://${options.host}:${options.port}`);});
                                
+
 
 
