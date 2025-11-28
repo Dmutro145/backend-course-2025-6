@@ -32,3 +32,6 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
 
 //запускаю сервер
 server.listen(options.port,options.host,()=>{console.log(`Сервер запущено на http://${options.host}:${options.port}`);});
+                               
+
+
