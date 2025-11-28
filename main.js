@@ -2,7 +2,7 @@ const { Command }=require('commander');
 const http=require('http');
 const fs=require('fs');
 const path=require('path'); //файловий шлях
-
+const formidable = require('formidable');
 //частина 2
 //база даних в памяті
 let inventory=[];
@@ -68,36 +68,57 @@ server.listen(options.port,options.host,()=>{console.log(`Сервер запу�
 //НЕРОЗБИРАВ ЦЕЙ КОД ПОВНІСТЮ
 // Обробка реєстрації нового пристрою
 function handleRegister(req, res) {
-  let body = '';
-  
-  req.on('data', chunk => {
-    body += chunk.toString();
+  const form = formidable({
+    uploadDir: options.cache,
+    keepExtensions: true,
+    multiples: false
   });
-  
-  req.on('end', () => {
-    try {
-      // Тимчасово - проста реалізація
-      const newItem = {
-        id: nextId++,
-        name: "Новий пристрій",
-        description: "Опис пристрою",
-        photo: null
-      };
-      
-      inventory.push(newItem);
-      
-      res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(newItem));
-      
-    } catch (error) {
+
+  form.parse(req, (err, fields, files) => {
+    if (err) {
       res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Помилка при реєстрації\n');
+      res.end('Помилка при обробці форми\n');
+      return;
     }
+
+    // Перевірка обов'язкового поля inventory_name
+    const inventoryName = fields.inventory_name ? fields.inventory_name[0] : '';
+    if (!inventoryName) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Ім\'я пристрою є обов\'язковим\n');
+      return;
+    }
+
+    // Обробка фото
+    let photoPath = null;
+    if (files.photo && files.photo[0]) {
+      photoPath = `/inventory/${nextId}/photo`;
+    }
+
+    // Створення нового пристрою
+    const newItem = {
+      id: nextId++,
+      name: inventoryName,
+      description: fields.description ? fields.description[0] : '',
+      photo: photoPath
+    };
+
+    inventory.push(newItem);
+
+    res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify(newItem));
   });
 }
 
 // Обробка отримання списку інвентарю
 function handleGetInventory(req, res) {
+  const inventoryWithLinks = inventory.map(item => ({
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    photo: item.photo ? `http://${options.host}:${options.port}${item.photo}` : null
+  }));
+
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify(inventory));
+  res.end(JSON.stringify(inventoryWithLinks));
 }
