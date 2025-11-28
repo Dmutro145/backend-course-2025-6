@@ -26,13 +26,14 @@ if(!fs.existsSync(options.cache))
 const server=http.createServer((req,res)=> //- req = запит від клієнта (що він хоче).
                                            //- res = відповідь сервера (що він повертає).
  {
-   res.writeHead(200, { 'Content-Type': 'text/plain' });//- заголовок Content-Type: text/plain 
+   res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });//- заголовок Content-Type: text/plain 
    res.end(`Сервер працює!\n`);
  });
 
 //запускаю сервер
 server.listen(options.port,options.host,()=>{console.log(`Сервер запущено на http://${options.host}:${options.port}`);});
                                
+
 
 
 
