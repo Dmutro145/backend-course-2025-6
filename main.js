@@ -43,28 +43,25 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
  console.log(`Отримано запит: ${method} ${url}`)
    
      // Обробка різних ендпоінтів
-  if (method === 'GET' && url === '/')// - Умова url === '/' означає: перевіряємо, чи клієнт звернувся саме до кореневого шляху сайту
-  {
+   if (method === 'GET' && url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сервер інвентаризації працює!\n');
   }
-  else if (method === 'POST' && url === '/register') //- Це перевірка: якщо клієнт надіслав POST‑запит на адресу /register, тоді викликається функція handleRegister.
-  {
+  else if (method === 'POST' && url === '/register') {
     handleRegister(req, res);
   }
-  else if (method === 'GET' && url === '/inventory')
-  {
+  else if (method === 'GET' && url === '/inventory') {
     handleGetInventory(req, res);
+  }
+  else if (url === '/inventory' && method !== 'GET') {
+    // Якщо /inventory але не GET метод - 405
+    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Method Not Allowed\n');
   }
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
   }
-   else if (url === '/inventory' && method !== 'GET') {
-  // Якщо /inventory але не GET метод - 405
-  res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-  res.end('Method Not Allowed\n');
-}
 });
 
 //запускаю сервер
