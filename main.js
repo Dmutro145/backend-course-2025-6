@@ -77,7 +77,11 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
   // Якщо /inventory/:id/photo але не PUT або GET метод - 405
   res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
   res.end('Method Not Allowed\n');
-}       
+}     
+     else if (method === 'GET' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
+  handleGetInventoryItem(req, res);
+}
+}
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
@@ -292,3 +296,30 @@ function handleUpdateInventoryItemPhoto(req, res) {
     res.end(JSON.stringify({ message: 'Фото оновлено', photo: inventory[itemIndex].photo }));
   });
 }
+
+// Обробка видалення пристрою
+function handleDeleteInventoryItem(req, res) {
+  const urlParts = req.url.split('/');
+  const id = parseInt(urlParts[2]);
+  
+  if (isNaN(id)) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Невірний ID\n');
+    return;
+  }
+  
+  const itemIndex = inventory.findIndex(item => item.id === id);
+  
+  if (itemIndex === -1) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Пристрій не знайдено\n');
+    return;
+  }
+
+  // Видаляємо пристрій з масиву
+  const deletedItem = inventory.splice(itemIndex, 1)[0];
+  
+  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify({ message: 'Пристрій видалено', item: deletedItem }));
+}
+
