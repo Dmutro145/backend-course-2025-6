@@ -72,6 +72,12 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
           else if (method === 'PUT' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
   handleUpdateInventoryItemPhoto(req, res);
 }
+            
+     else if (url.startsWith('/inventory/') && url.endsWith('/photo') && method !== 'PUT' && method !== 'GET') {
+  // Якщо /inventory/:id/photo але не PUT або GET метод - 405
+  res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('Method Not Allowed\n');
+}       
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
