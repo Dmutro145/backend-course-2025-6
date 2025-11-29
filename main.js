@@ -323,4 +323,3 @@ function handleDeleteInventoryItem(req, res) {
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify({ message: 'Пристрій видалено', item: deletedItem }));
 }
-
