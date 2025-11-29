@@ -62,6 +62,10 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
     {
   handleGetInventoryItem(req, res);
 }
+      else if (method === 'PUT' && url.startsWith('/inventory/') && !url.endsWith('/photo'))
+      {
+  handleUpdateInventoryItem(req, res);
+}
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
@@ -159,5 +163,46 @@ function handleGetInventoryItem(req, res) {
  
 }
  
+ // Обробка оновлення інформації про пристрій
+function handleUpdateInventoryItem(req, res) {
+  const urlParts = req.url.split('/');
+  const id = parseInt(urlParts[2]);
+  
+  if (isNaN(id)) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Невірний ID\n');
+    return;
+  }
+  
+  const itemIndex = inventory.findIndex(item => item.id === id);
+  
+  if (itemIndex === -1) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Пристрій не знайдено\n');
+    return;
+  }
+
+  let body = '';
+  req.on('data', chunk => body += chunk.toString());
+  req.on('end', () => {
+    try {
+      const updateData = JSON.parse(body);
+      
+      // Оновлюємо поля, якщо вони передані
+      if (updateData.name) {
+        inventory[itemIndex].name = updateData.name;
+      }
+      if (updateData.description !== undefined) {
+        inventory[itemIndex].description = updateData.description;
+      }
+      
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(inventory[itemIndex]));
+      
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Невірний JSON\n');
+    }
+  });
 }
- 
+
