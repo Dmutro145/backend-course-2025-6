@@ -239,7 +239,11 @@ function handleGetInventoryItemPhoto(req, res) {
     return;
   }
 
-
+  // Тимчасово - повертаємо тестове повідомлення
+  // Пізніше додамо реальну роботу з файлами
+  res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('Фото пристрою (тимчасово)\n');
+}
   
   // Обробка оновлення фото пристрою
 function handleUpdateInventoryItemPhoto(req, res) {
@@ -283,8 +287,3 @@ function handleUpdateInventoryItemPhoto(req, res) {
   });
 }
 
-  // Тимчасово - повертаємо тестове повідомлення
-  // Пізніше додамо реальну роботу з файлами
-  res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-  res.end('Фото пристрою (тимчасово)\n');
-}
