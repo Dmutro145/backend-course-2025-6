@@ -113,7 +113,8 @@ function handleRegister(req, res) {
     }
 
     // Перевірка обов'язкового поля inventory_name
-   const inventoryName = fields.inventory_name ? fields.inventory_name[0].trim() : '';
+const inventoryName = fields.inventory_name && fields.inventory_name[0] ? fields.inventory_name[0].trim() : '';
+const description = fields.description && fields.description[0] ? fields.description[0].trim() : '';
     if (!inventoryName) {
       res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Ім\'я пристрою є обов\'язковим\n');
