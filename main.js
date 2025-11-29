@@ -81,7 +81,7 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
      else if (method === 'GET' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
   handleGetInventoryItem(req, res);
 }
-}
+
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
