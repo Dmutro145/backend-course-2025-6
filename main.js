@@ -50,7 +50,7 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
    else if (method === 'POST' && url === '/register') {
      handleRegister(req, res);
    }
-   else if (method === 'GET' && url === '/inventory') {
+  else if (method === 'GET' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
      handleGetInventory(req, res);
    }
    else if (url === '/inventory' && method !== 'GET') {
