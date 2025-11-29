@@ -121,7 +121,7 @@ function handleRegister(req, res) {
     const newItem = {
       id: nextId++,
       name: inventoryName,
-   description: fields.description ? fields.description[0].trim() : ''
+   description: fields.description ? fields.description[0].trim() : '',
       photo: photoPath
     };
 
