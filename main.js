@@ -69,6 +69,15 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
         else if (method === 'GET' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
   handleGetInventoryItemPhoto(req, res);
 }
+          else if (method === 'PUT' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
+  handleUpdateInventoryItemPhoto(req, res);
+}
+            
+     else if (url.startsWith('/inventory/') && url.endsWith('/photo') && method !== 'PUT' && method !== 'GET') {
+  // Якщо /inventory/:id/photo але не PUT або GET метод - 405
+  res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('Method Not Allowed\n');
+}       
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
@@ -240,4 +249,46 @@ function handleGetInventoryItemPhoto(req, res) {
   // Пізніше додамо реальну роботу з файлами
   res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
   res.end('Фото пристрою (тимчасово)\n');
+}
+  
+  // Обробка оновлення фото пристрою
+function handleUpdateInventoryItemPhoto(req, res) {
+  const urlParts = req.url.split('/');
+  const id = parseInt(urlParts[2]);
+  
+  if (isNaN(id)) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Невірний ID\n');
+    return;
+  }
+  
+  const itemIndex = inventory.findIndex(item => item.id === id);
+  
+  if (itemIndex === -1) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Пристрій не знайдено\n');
+    return;
+  }
+
+  const form = formidable({
+    uploadDir: options.cache,
+    keepExtensions: true,
+    multiples: false
+  });
+
+  form.parse(req, (err, fields, files) => {
+    if (err) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Помилка при обробці фото\n');
+      return;
+    }
+
+    // Оновлюємо шлях до фото
+    if (files.photo && files.photo[0]) {
+      inventory[itemIndex].photo = `/inventory/${id}/photo`;
+    }
+
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.end(JSON.stringify({ message: 'Фото оновлено', photo: inventory[itemIndex].photo }));
+  });
 }
