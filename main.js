@@ -104,7 +104,7 @@ function handleRegister(req, res) {
     }
 
     // Перевірка обов'язкового поля inventory_name
-    const inventoryName = fields.inventory_name ? fields.inventory_name[0] : '';
+   const inventoryName = fields.inventory_name ? fields.inventory_name[0].trim() : '';
     if (!inventoryName) {
       res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Ім\'я пристрою є обов\'язковим\n');
@@ -121,7 +121,7 @@ function handleRegister(req, res) {
     const newItem = {
       id: nextId++,
       name: inventoryName,
-      description: fields.description ? fields.description[0] : '',
+   description: fields.description ? fields.description[0].trim() : ''
       photo: photoPath
     };
 
