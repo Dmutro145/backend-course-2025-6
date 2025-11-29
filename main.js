@@ -78,9 +78,7 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
   res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
   res.end('Method Not Allowed\n');
 }     
-     else if (method === 'GET' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
-  handleGetInventoryItem(req, res);
-}
+   
        else if (method === 'DELETE' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
   handleDeleteInventoryItem(req, res);
 }
