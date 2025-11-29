@@ -32,13 +32,12 @@ if(!fs.existsSync(options.cache))
   console.log(`створено директорію кешу: ${options.cache}`);
 }
 
-// ств http серв
 const server = http.createServer((req, res) => {
   const url = req.url;
   const method = req.method;
-  console.log(`Отримано запит: ${method} ${url}`)
+  console.log(`Отримано запит: ${method} ${url}`);
 
-  // Обробка різних ендпоінтів
+  // Спрощена маршрутизація
   if (method === 'GET' && url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сервер інвентаризації працює!\n');
@@ -49,31 +48,40 @@ const server = http.createServer((req, res) => {
   else if (method === 'GET' && url === '/inventory') {
     handleGetInventory(req, res);
   }
+  else if (url.startsWith('/inventory/')) {
+    const urlParts = url.split('/');
+    const id = parseInt(urlParts[2]);
+    
+    if (isNaN(id)) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Невірний ID\n');
+      return;
+    }
+    
+    // Обробка різних методів для /inventory/:id
+    if (method === 'GET' && url.endsWith('/photo')) {
+      handleGetInventoryItemPhoto(req, res);
+    }
+    else if (method === 'PUT' && url.endsWith('/photo')) {
+      handleUpdateInventoryItemPhoto(req, res);
+    }
+    else if (method === 'DELETE' && !url.endsWith('/photo')) {
+      handleDeleteInventoryItem(req, res);
+    }
+    else if (method === 'PUT' && !url.endsWith('/photo')) {
+      handleUpdateInventoryItem(req, res);
+    }
+    else if (method === 'GET' && !url.endsWith('/photo')) {
+      handleGetInventoryItem(req, res);
+    }
+    else {
+      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Method Not Allowed\n');
+    }
+  }
   else if (url === '/inventory' && method !== 'GET') {
-    // Якщо /inventory але не GET метод - 405
     res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Method Not Allowed\n');
-  }
-  else if (method === 'GET' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
-    handleGetInventoryItemPhoto(req, res);
-  }
-  else if (method === 'PUT' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
-    handleUpdateInventoryItemPhoto(req, res);
-  }
-  // ПЕРЕНЕСІТЬ DELETE СЮДИ - ПЕРЕД 405 ДЛЯ PHOTO
-  else if (method === 'DELETE' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
-    handleDeleteInventoryItem(req, res);
-  }
-  else if (url.startsWith('/inventory/') && url.endsWith('/photo') && method !== 'PUT' && method !== 'GET') {
-    // Якщо /inventory/:id/photo але не PUT або GET метод - 405
-    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Method Not Allowed\n');
-  }
-  else if (method === 'PUT' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
-    handleUpdateInventoryItem(req, res);
-  }
-  else if (method === 'GET' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
-    handleGetInventoryItem(req, res);
   }
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
