@@ -35,53 +35,53 @@ if(!fs.existsSync(options.cache))
 // ств http серв
 const server=http.createServer((req,res)=> //- req = запит від клієнта (що він хоче).
                                            //- res = відповідь сервера (що він повертає).
- {
-   //- req.url → бере URL‑адресу запиту (наприклад, /products?id=5). Це шлях, який клієнт запитує у твого HTTP‑сервера.
-   //- req.method → бере HTTP‑метод запиту (наприклад, GET, POST, PUT, DELETE). Це показує, що саме клієнт хоче зробити.
-   const url=req.url;
-   const method=req.method;
-   console.log(`Отримано запит: ${method} ${url}`)
-   
-   // Обробка різних ендпоінтів
-   if (method === 'GET' && url === '/') {
-     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-     res.end('Сервер інвентаризації працює!\n');
-   }
-   else if (method === 'POST' && url === '/register') {
-     handleRegister(req, res);
-   }
+{
+  //- req.url → бере URL‑адресу запиту (наприклад, /products?id=5). Це шлях, який клієнт запитує у твого HTTP‑сервера.
+  //- req.method → бере HTTP‑метод запиту (наприклад, GET, POST, PUT, DELETE). Це показує, що саме клієнт хоче зробити.
+  const url=req.url;
+  const method=req.method;
+  console.log(`Отримано запит: ${method} ${url}`)
+
+  // Обробка різних ендпоінтів
+  if (method === 'GET' && url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Сервер інвентаризації працює!\n');
+  }
+  else if (method === 'POST' && url === '/register') {
+    handleRegister(req, res);
+  }
+  else if (method === 'GET' && url === '/inventory') {
+    handleGetInventory(req, res);
+  }
+  else if (url === '/inventory' && method !== 'GET') {
+    // Якщо /inventory але не GET метод - 405
+    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Method Not Allowed\n');
+  }
+  else if (method === 'GET' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
+    handleGetInventoryItemPhoto(req, res);
+  }
+  else if (method === 'PUT' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
+    handleUpdateInventoryItemPhoto(req, res);
+  }
+  else if (url.startsWith('/inventory/') && url.endsWith('/photo') && method !== 'PUT' && method !== 'GET') {
+    // Якщо /inventory/:id/photo але не PUT або GET метод - 405
+    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Method Not Allowed\n');
+  }
+  else if (method === 'DELETE' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
+    handleDeleteInventoryItem(req, res);
+  }
+  else if (method === 'PUT' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
+    handleUpdateInventoryItem(req, res);
+  }
   else if (method === 'GET' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
-     handleGetInventory(req, res);
-   }
-   else if (url === '/inventory' && method !== 'GET') {
-     // Якщо /inventory але не GET метод - 405
-     res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-     res.end('Method Not Allowed\n');
-   }
-   else if (method === 'GET' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
-     handleGetInventoryItemPhoto(req, res);
-   }
-   else if (method === 'PUT' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
-     handleUpdateInventoryItemPhoto(req, res);
-   }
-   else if (url.startsWith('/inventory/') && url.endsWith('/photo') && method !== 'PUT' && method !== 'GET') {
-     // Якщо /inventory/:id/photo але не PUT або GET метод - 405
-     res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-     res.end('Method Not Allowed\n');
-   }
-   else if (method === 'DELETE' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
-     handleDeleteInventoryItem(req, res);
-   }
-   else if (method === 'PUT' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
-     handleUpdateInventoryItem(req, res);
-   }
-   else if (method === 'GET' && url.startsWith('/inventory/') && !url.endsWith('/photo')) {
-     handleGetInventoryItem(req, res);
-   }
-   else {
-     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-     res.end('Сторінку не знайдено\n');
-   }
+    handleGetInventoryItem(req, res);
+  }
+  else {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Сторінку не знайдено\n');
+  }
 });
 
 //запускаю сервер
@@ -121,7 +121,7 @@ function handleRegister(req, res) {
     const newItem = {
       id: nextId++,
       name: inventoryName,
-   description: fields.description ? fields.description[0].trim() : '',
+  description: fields.description ? fields.description[0].trim() : '',
       photo: photoPath
     };
 
