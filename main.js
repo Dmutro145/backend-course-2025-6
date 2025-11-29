@@ -58,6 +58,10 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
     res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Method Not Allowed\n');
   }
+    else if (method === 'GET' && url.startsWith('/inventory/'))
+    {
+  handleGetInventoryItem(req, res);
+}
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
@@ -123,4 +127,39 @@ function handleGetInventory(req, res) {
 
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(inventoryWithLinks));
+}
+
+
+// Обробка отримання конкретного пристрою за ID
+function handleGetInventoryItem(req, res) {
+  const urlParts = req.url.split('/'); // /розділяє на масив рядків
+  const id = parseInt(urlParts[2]);
+  
+  if (isNaN(id)) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Невірний ID\n');
+    return;
+  }
+  
+  //- .find(...) — метод масиву JavaScript, який проходить по всіх елементах
+  //і повертає перший об’єкт, що відповідає умові.
+  //- item => item.id === id — це стрілочна функція (callback), 
+  //яка перевіряє: чи id об’єкта збігається з шуканим id.
+  const item = inventory.find(item => item.id === id);
+  
+  if (!item) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Пристрій не знайдено\n');
+    return;
+  }
+
+  // Додаємо посилання на фото
+  const itemWithPhoto = {
+    ...item,
+    photo: item.photo ? `http://${options.host}:${options.port}${item.photo}` : null
+  };
+  
+  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+  //- JSON.stringify(itemWithPhoto) — перетворює JavaScript‑об’єкт itemWithPhoto у рядок JSON.
+  res.end(JSON.stringify(itemWithPhoto));
 }
