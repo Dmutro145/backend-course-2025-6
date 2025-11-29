@@ -66,6 +66,9 @@ const server=http.createServer((req,res)=> //- req = запит від кліє�
       {
   handleUpdateInventoryItem(req, res);
 }
+        else if (method === 'GET' && url.startsWith('/inventory/') && url.endsWith('/photo')) {
+  handleGetInventoryItemPhoto(req, res);
+}
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
@@ -205,4 +208,36 @@ function handleUpdateInventoryItem(req, res) {
     }
   });
 }
- 
+
+
+// Обробка отримання фото пристрою
+function handleGetInventoryItemPhoto(req, res) {
+  const urlParts = req.url.split('/');
+  const id = parseInt(urlParts[2]);
+  
+  if (isNaN(id)) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Невірний ID\n');
+    return;
+  }
+  
+  const item = inventory.find(item => item.id === id);
+  
+  if (!item) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Пристрій не знайдено\n');
+    return;
+  }
+
+  // Перевірка чи є фото
+  if (!item.photo) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Фото не знайдено\n');
+    return;
+  }
+
+  // Тимчасово - повертаємо тестове повідомлення
+  // Пізніше додамо реальну роботу з файлами
+  res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('Фото пристрою (тимчасово)\n');
+}
