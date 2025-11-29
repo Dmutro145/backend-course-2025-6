@@ -83,6 +83,10 @@ const server = http.createServer((req, res) => {
     res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Method Not Allowed\n');
   }
+  else if (method === 'GET' && url === '/RegisterForm.html')
+  {
+  handleRegisterForm(req, res);
+  }
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
@@ -322,4 +326,108 @@ function handleDeleteInventoryItem(req, res) {
   
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify({ message: 'Пристрій видалено', item: deletedItem }));
+}
+
+// Обробка відображення форми реєстрації
+function handleRegisterForm(req, res) {
+  const htmlForm = `
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Форма реєстрації пристрою</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px 0;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .required {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Форма реєстрації пристрою</h1>
+        <form action="/register" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="inventory_name">Назва пристрою <span class="required">*</span></label>
+                <input type="text" id="inventory_name" name="inventory_name" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Опис пристрою</label>
+                <textarea id="description" name="description" placeholder="Опишіть пристрій..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="photo">Фото пристрою</label>
+                <input type="file" id="photo" name="photo" accept="image/*">
+            </div>
+            
+            <button type="submit">Зареєструвати пристрій</button>
+        </form>
+    </div>
+</body>
+</html>
+  `;
+
+  res.writeHead(200, { 
+    'Content-Type': 'text/html; charset=utf-8',
+    'Content-Length': Buffer.byteLength(htmlForm, 'utf8')
+  });
+  res.end(htmlForm);
 }
