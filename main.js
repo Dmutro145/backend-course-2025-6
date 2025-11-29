@@ -159,5 +159,4 @@ function handleGetInventoryItem(req, res) {
  
 }
  
-}
  
