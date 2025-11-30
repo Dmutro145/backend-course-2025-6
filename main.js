@@ -26,20 +26,50 @@ const server = http.createServer((req, res) => {
   const method = req.method;
   console.log(`Отримано запит: ${method} ${url}`);
 
-    console.log('URL для порівняння:', JSON.stringify(url));
-  console.log('Чи дорівнює "/search":', url === '/search');
-  console.log('Чи починається з "/search":', url.startsWith('/search'));
   
+
+  // Обробка кореневого шляху
   if (method === 'GET' && url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сервер інвентаризації працює!\n');
+    return;
   }
+
+  // Обробка POST /register
   else if (method === 'POST' && url === '/register') {
     handleRegister(req, res);
+    return;
   }
- else if (method === 'GET' && (url === '/inventory' || url.startsWith('/inventory?'))) {
-  handleGetInventory(req, res);
-}
+
+  // Обробка GET /inventory
+  else if (method === 'GET' && (url === '/inventory' || url.startsWith('/inventory?'))) {
+    handleGetInventory(req, res);
+    return;
+  }
+
+  // Обробка HTML форм
+  else if (method === 'GET' && url === '/RegisterForm.html') {
+    handleRegisterForm(req, res);
+    return;
+  }
+  else if (method === 'GET' && url === '/SearchForm.html') {
+    handleSearchForm(req, res);
+    return;
+  }
+
+  // Обробка POST /search
+  else if (url === '/search') {
+    if (method === 'POST') {
+      handleSearch(req, res);
+    } else {
+      // Для будь-якого іншого методу повертаємо 405
+      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Method Not Allowed\n');
+    }
+    return;
+  }
+
+  // Обробка /inventory/{id} та пов'язаних маршрутів
   else if (url.startsWith('/inventory/')) {
     const urlParts = url.split('/');
     const id = parseInt(urlParts[2]);
@@ -50,39 +80,56 @@ const server = http.createServer((req, res) => {
       return;
     }
     
-    if (method === 'GET' && url.endsWith('/photo')) {
-      handleGetInventoryItemPhoto(req, res);
+    // Обробка фото
+    if (url.endsWith('/photo')) {
+      if (method === 'GET') {
+        handleGetInventoryItemPhoto(req, res);
+      } else if (method === 'PUT') {
+        handleUpdateInventoryItemPhoto(req, res);
+      } else {
+        res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Method Not Allowed\n');
+      }
+      return;
     }
-    else if (method === 'PUT' && url.endsWith('/photo')) {
-      handleUpdateInventoryItemPhoto(req, res);
-    }
-    else if (method === 'DELETE' && !url.endsWith('/photo')) {
-      handleDeleteInventoryItem(req, res);
-    }
-    else if (method === 'PUT' && !url.endsWith('/photo')) {
-      handleUpdateInventoryItem(req, res);
-    }
-    else if (method === 'GET' && !url.endsWith('/photo')) {
+    
+    // Обробка основних операцій з елементом
+    if (method === 'GET') {
       handleGetInventoryItem(req, res);
-    }
-    else {
+    } else if (method === 'PUT') {
+      handleUpdateInventoryItem(req, res);
+    } else if (method === 'DELETE') {
+      handleDeleteInventoryItem(req, res);
+    } else {
       res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Method Not Allowed\n');
     }
+    return;
   }
-  else if (url === '/inventory' && method !== 'GET') {
-    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Method Not Allowed\n');
+
+  // Обробка /inventory (тільки GET)
+  else if (url === '/inventory') {
+    if (method === 'GET') {
+      handleGetInventory(req, res);
+    } else {
+      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Method Not Allowed\n');
+    }
+    return;
   }
-  else if (method === 'GET' && url === '/RegisterForm.html') {
-    handleRegisterForm(req, res);
+
+  // Обробка /register (тільки POST)
+  else if (url === '/register') {
+    if (method === 'POST') {
+      handleRegister(req, res);
+    } else {
+      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Method Not Allowed\n');
+    }
+    return;
   }
-    else if (method === 'GET' && url === '/SearchForm.html') {
-  handleSearchForm(req, res);
-}
-else if (method === 'POST' && url.startsWith('/search')) {
-  handleSearch(req, res);
-}  
+
+  // Всі інші запити - 404
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
