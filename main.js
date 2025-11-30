@@ -478,7 +478,7 @@ function handleSearchForm(req, res) {
 <body>
     <div class="form-container">
         <h1>Форма пошуку пристрою</h1>
-        <form action="/inventory" method="GET">
+        <form action="/inventory" method="GET" id="searchForm">
             <div class="form-group">
                 <label for="search_query">Серійний номер або ID пристрою <span class="required">*</span></label>
                 <input type="text" id="search_query" name="search_query" placeholder="Введіть ID або назву..." required>
