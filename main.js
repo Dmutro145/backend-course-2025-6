@@ -125,6 +125,20 @@ const server = http.createServer((req, res) => {
     }
     return;
   }
+    else if (url === '/inventory') {
+  if (method === 'POST') {
+    handleCreateInventoryItem(req, res);
+    return;
+  } else if (method === 'GET') {
+    handleGetInventory(req, res);
+    return;
+  } else {
+    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Method Not Allowed\n');
+    return;
+  }
+}
+
 
   // Всі інші запити - 404
   else {
@@ -132,6 +146,7 @@ const server = http.createServer((req, res) => {
     res.end('Сторінку не знайдено\n');
   }
 });
+
 
 server.listen(options.port, options.host, () => {
   console.log(`Сервер запущено на http://${options.host}:${options.port}`);
@@ -577,3 +592,34 @@ function handleSearch(req, res) {
     }
   });
 }
+function handleCreateInventoryItem(req, res) {
+  let body = '';
+  req.on('data', chunk => body += chunk.toString());
+  req.on('end', () => {
+    try {
+      const data = JSON.parse(body);
+
+      if (!data.name) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Ім\'я пристрою є обов\'язковим\n');
+        return;
+      }
+
+      const newItem = {
+        id: nextId++,
+        name: data.name,
+        description: data.description || '',
+        photo: null
+      };
+
+      inventory.push(newItem);
+
+      res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(newItem));
+    } catch (err) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Невірний JSON\n');
+    }
+  });
+}
+
