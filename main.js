@@ -87,12 +87,37 @@ server.listen(options.port, options.host, () => {
 });
 
 function handleGetInventory(req, res) {
-  const inventoryWithLinks = inventory.map(item => ({
-    id: item.id,
-    name: item.name,
-    description: item.description,
-    photo: item.photo ? `http://${options.host}:${options.port}${item.photo}` : null
-  }));
+  // Отримуємо параметри пошуку з URL
+  const url = new URL(req.url, `http://${req.headers.host}`);
+  const searchQuery = url.searchParams.get('search_query');
+  const includePhoto = url.searchParams.get('include_photo') === 'on';
+
+  let filteredInventory = inventory;
+
+  // Застосовуємо фільтрацію якщо є запит пошуку
+  if (searchQuery) {
+    filteredInventory = inventory.filter(item => 
+      item.id.toString().includes(searchQuery) || 
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }
+
+  const inventoryWithLinks = filteredInventory.map(item => {
+    let description = item.description;
+    
+    // Додаємо посилання на фото до опису якщо вибрано опцію
+    if (includePhoto && item.photo) {
+      description += `\nФото: http://${options.host}:${options.port}${item.photo}`;
+    }
+
+    return {
+      id: item.id,
+      name: item.name,
+      description: description,
+      photo: item.photo ? `http://${options.host}:${options.port}${item.photo}` : null
+    };
+  });
 
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(inventoryWithLinks));
