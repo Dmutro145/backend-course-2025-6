@@ -76,6 +76,9 @@ const server = http.createServer((req, res) => {
     else if (method === 'GET' && url === '/SearchForm.html') {
   handleSearchForm(req, res);
 }
+  else if (method === 'POST' && url === '/search') {
+  handleSearch(req, res);
+}    
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
@@ -478,18 +481,18 @@ function handleSearchForm(req, res) {
 <body>
     <div class="form-container">
         <h1>Форма пошуку пристрою</h1>
-      <form action="/inventory" method="GET">
-            <div class="form-group">
-                <label for="search_query">Серійний номер або ID пристрою <span class="required">*</span></label>
-                <input type="text" id="search_query" name="search_query" placeholder="Введіть ID або назву..." required>
-            </div>
-            
-            <div class="form-group">
-                <div class="checkbox-group">
-                    <input type="checkbox" id="include_photo" name="include_photo">
-                    <label for="include_photo">Додати посилання на фото пристрою в опис</label>
-                </div>
-            </div>
+    <form action="/search" method="POST">
+    <div class="form-group">
+        <label for="id">Серійний номер або ID пристрою <span class="required">*</span></label>
+        <input type="text" id="id" name="id" placeholder="Введіть ID або назву..." required>
+    </div>
+    
+    <div class="form-group">
+        <div class="checkbox-group">
+            <input type="checkbox" id="has_photo" name="has_photo">
+            <label for="has_photo">Додати посилання на фото пристрою в опис</label>
+        </div>
+    </div>
             
             <button type="submit">Пошук пристрою</button>
         </form>
@@ -502,6 +505,66 @@ function handleSearchForm(req, res) {
     'Content-Length': Buffer.byteLength(htmlForm, 'utf8')
   });
   res.end(htmlForm);
+}
+// Обробка пошуку пристрою за ID
+function handleSearch(req, res) {
+  let body = '';
+  
+  req.on('data', chunk => {
+    body += chunk.toString();
+  });
+  
+  req.on('end', () => {
+    try {
+      // Парсимо дані форми (x-www-form-urlencoded)
+      const params = new URLSearchParams(body);
+      const id = params.get('id');
+      const hasPhoto = params.get('has_photo') === 'on';
+      
+      console.log('Пошук пристрою - ID:', id, 'Has photo:', hasPhoto);
+      
+      // Перевірка наявності ID
+      if (!id) {
+        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('ID пристрою є обов\'язковим\n');
+        return;
+      }
+      
+      // Пошук пристрою в інвентарі
+      const item = inventory.find(item => 
+        item.id.toString() === id || item.name.toLowerCase().includes(id.toLowerCase())
+      );
+      
+      if (!item) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        res.end('Пристрій не знайдено\n');
+        return;
+      }
+      
+      // Формуємо відповідь
+      let description = item.description;
+      
+      // Додаємо посилання на фото якщо вибрано опцію
+      if (hasPhoto && item.photo) {
+        description += `\nФото: http://${options.host}:${options.port}${item.photo}`;
+      }
+      
+      const searchResult = {
+        id: item.id,
+        name: item.name,
+        description: description,
+        photo: item.photo ? `http://${options.host}:${options.port}${item.photo}` : null
+      };
+      
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(searchResult));
+      
+    } catch (error) {
+      console.error('Помилка при обробці пошуку:', error);
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Помилка при обробці запиту\n');
+    }
+  });
 }
 
 
