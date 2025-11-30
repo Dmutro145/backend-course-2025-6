@@ -80,9 +80,9 @@ const server = http.createServer((req, res) => {
     else if (method === 'GET' && url === '/SearchForm.html') {
   handleSearchForm(req, res);
 }
-  else if (method === 'POST' && url === '/search') {
+else if (method === 'POST' && url.startsWith('/search')) {
   handleSearch(req, res);
-}    
+}  
   else {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сторінку не знайдено\n');
