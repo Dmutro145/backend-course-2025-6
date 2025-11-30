@@ -204,47 +204,6 @@ function handleGetInventoryItem(req, res) {
   res.end(JSON.stringify(itemWithPhoto));
 }
 
-function handleUpdateInventoryItem(req, res) {
-  const urlParts = req.url.split('/');
-  const id = parseInt(urlParts[2]);
-  
-  if (isNaN(id)) {
-    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Невірний ID\n');
-    return;
-  }
-  
-  const itemIndex = inventory.findIndex(item => item.id === id);
-  
-  if (itemIndex === -1) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Пристрій не знайдено\n');
-    return;
-  }
-
-  let body = '';
-  req.on('data', chunk => body += chunk.toString());
-  req.on('end', () => {
-    try {
-      const updateData = JSON.parse(body);
-      
-      if (updateData.name) {
-        inventory[itemIndex].name = updateData.name;
-      }
-      if (updateData.description !== undefined) {
-        inventory[itemIndex].description = updateData.description;
-      }
-      
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(inventory[itemIndex]));
-      
-    } catch (error) {
-      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Невірний JSON\n');
-    }
-  });
-}
-
 function handleGetInventoryItemPhoto(req, res) {
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
@@ -269,8 +228,9 @@ function handleGetInventoryItemPhoto(req, res) {
     return;
   }
 
-  res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
-  res.end('Фото пристрою (тимчасово)\n');
+  // ВИПРАВЛЕНО: тепер повертаємо image/jpeg
+  res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+  res.end('Тимчасове фото (заглушка)\n');
 }
 
 function handleUpdateInventoryItemPhoto(req, res) {
