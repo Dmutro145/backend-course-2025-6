@@ -1,4 +1,4 @@
-cconst { Command } = require('commander');
+const { Command } = require('commander');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
@@ -138,37 +138,12 @@ server.listen(options.port, options.host, () => {
 });
 
 function handleGetInventory(req, res) {
-  // Отримуємо параметри пошуку з URL
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  const searchQuery = url.searchParams.get('search_query');
-  const includePhoto = url.searchParams.get('include_photo') === 'on';
-
-  let filteredInventory = inventory;
-
-  // Застосовуємо фільтрацію якщо є запит пошуку
-  if (searchQuery) {
-    filteredInventory = inventory.filter(item => 
-      item.id.toString().includes(searchQuery) || 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }
-
-  const inventoryWithLinks = filteredInventory.map(item => {
-    let description = item.description;
-    
-    // Додаємо посилання на фото до опису якщо вибрано опцію
-    if (includePhoto && item.photo) {
-      description += `\nФото: http://${options.host}:${options.port}${item.photo}`;
-    }
-
-    return {
-      id: item.id,
-      name: item.name,
-      description: description,
-      photo: item.photo ? `http://${options.host}:${options.port}${item.photo}` : null
-    };
-  });
+  const inventoryWithLinks = inventory.map(item => ({
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    photo: item.photo ? `http://${options.host}:${options.port}${item.photo}` : null
+  }));
 
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(inventoryWithLinks));
@@ -242,7 +217,6 @@ function handleUpdateInventoryItem(req, res) {
   });
 }
 
-// ВИПРАВЛЕНА ФУНКЦІЯ - тепер повертає image/jpeg
 function handleGetInventoryItemPhoto(req, res) {
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
@@ -359,9 +333,6 @@ function handleRegister(req, res) {
       res.end('Помилка при обробці форми\n');
       return;
     }
-
-    console.log('Отримані поля:', fields);
-    console.log('Отримані файли:', files);
 
     let inventoryName = '';
     let description = '';
@@ -564,21 +535,16 @@ function handleSearch(req, res) {
   
   req.on('end', () => {
     try {
-      // Парсимо дані форми (x-www-form-urlencoded)
       const params = new URLSearchParams(body);
       const id = params.get('id');
       const hasPhoto = params.get('has_photo') === 'on';
       
-      console.log('Пошук пристрою - ID:', id, 'Has photo:', hasPhoto);
-      
-      // Перевірка наявності ID
       if (!id) {
         res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
         res.end('ID пристрою є обов\'язковим\n');
         return;
       }
       
-      // Пошук пристрою в інвентарі
       const item = inventory.find(item => 
         item.id.toString() === id || item.name.toLowerCase().includes(id.toLowerCase())
       );
@@ -589,10 +555,8 @@ function handleSearch(req, res) {
         return;
       }
       
-      // Формуємо відповідь
       let description = item.description;
       
-      // Додаємо посилання на фото якщо вибрано опцію
       if (hasPhoto && item.photo) {
         description += `\nФото: http://${options.host}:${options.port}${item.photo}`;
       }
@@ -608,7 +572,6 @@ function handleSearch(req, res) {
       res.end(JSON.stringify(searchResult));
       
     } catch (error) {
-      console.error('Помилка при обробці пошуку:', error);
       res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Помилка при обробці запиту\n');
     }
