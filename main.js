@@ -33,9 +33,9 @@ const server = http.createServer((req, res) => {
   else if (method === 'POST' && url === '/register') {
     handleRegister(req, res);
   }
-  else if (method === 'GET' && url === '/inventory') {
-    handleGetInventory(req, res);
-  }
+ else if (method === 'GET' && (url === '/inventory' || url.startsWith('/inventory?'))) {
+  handleGetInventory(req, res);
+}
   else if (url.startsWith('/inventory/')) {
     const urlParts = url.split('/');
     const id = parseInt(urlParts[2]);
@@ -478,7 +478,7 @@ function handleSearchForm(req, res) {
 <body>
     <div class="form-container">
         <h1>Форма пошуку пристрою</h1>
-        <form action="/inventory" method="GET" id="searchForm">
+      <form action="/inventory" method="GET">
             <div class="form-group">
                 <label for="search_query">Серійний номер або ID пристрою <span class="required">*</span></label>
                 <input type="text" id="search_query" name="search_query" placeholder="Введіть ID або назву..." required>
