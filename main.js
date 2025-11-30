@@ -1,4 +1,4 @@
-const { Command } = require('commander');
+ const { Command } = require('commander');
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
