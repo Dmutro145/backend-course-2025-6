@@ -570,5 +570,5 @@ function handleSearch(req, res) {
     }
   });
 }
-}
+
 
