@@ -501,12 +501,12 @@ function handleSearchForm(req, res) {
                     description += " \\nФото: http://localhost:3000/inventory/1/photo";
                 }
                 
-                resultsDiv.innerHTML = `
-                    <h3>Результат пошуку:</h3>
-                    <p><strong>ID:</strong> 1</p>
-                    <p><strong>Назва:</strong> Планшет</p>
-                    <p><strong>Опис:</strong> ${description}</p>
-                `;
+             resultsDiv.innerHTML = `
+    <h3>Search Results:</h3>
+    <p><strong>ID:</strong> 1</p>
+    <p><strong>Name:</strong> Tablet</p>
+    <p><strong>Description:</strong> ${description}</p>
+`;
                 resultsDiv.style.display = 'block';
             } else {
                 resultsDiv.innerHTML = '<p>Пристрій не знайдено</p>';
