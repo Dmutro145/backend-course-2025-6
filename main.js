@@ -213,7 +213,8 @@ function handleUpdateInventoryItemPhoto(req, res) {
     uploadDir: options.cache,
     keepExtensions: true,
     multiples: false,
-    allowEmptyFiles: true   
+    allowEmptyFiles: true,
+       minFileSize: 0
   });
 
   form.parse(req, (err, fields, files) => {
@@ -264,7 +265,8 @@ function handleRegister(req, res) {
     uploadDir: options.cache,
     keepExtensions: true,
     multiples: false,
-     allowEmptyFiles: true 
+     allowEmptyFiles: true,
+       minFileSize: 0
   });
 
   form.parse(req, (err, fields, files) => {
