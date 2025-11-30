@@ -481,7 +481,7 @@ function handleSearchForm(req, res) {
 <body>
     <div class="form-container">
         <h1>Форма пошуку пристрою</h1>
-    <form action="/search" method="POST">
+<form action="/search" method="POST">
     <div class="form-group">
         <label for="id">Серійний номер або ID пристрою <span class="required">*</span></label>
         <input type="text" id="id" name="id" placeholder="Введіть ID або назву..." required>
@@ -493,9 +493,9 @@ function handleSearchForm(req, res) {
             <label for="has_photo">Додати посилання на фото пристрою в опис</label>
         </div>
     </div>
-            
-            <button type="submit">Пошук пристрою</button>
-        </form>
+    
+    <button type="submit">Пошук пристрою</button>
+</form>
     </div>
 </body>
 </html>`;
