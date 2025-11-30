@@ -212,8 +212,8 @@ function handleUpdateInventoryItemPhoto(req, res) {
   const form = formidable({
     uploadDir: options.cache,
     keepExtensions: true,
-    multiples: false
-     allowEmptyFiles: true 
+    multiples: false,
+    allowEmptyFiles: true   
   });
 
   form.parse(req, (err, fields, files) => {
@@ -263,7 +263,7 @@ function handleRegister(req, res) {
   const form = formidable({
     uploadDir: options.cache,
     keepExtensions: true,
-    multiples: false
+    multiples: false,
      allowEmptyFiles: true 
   });
 
