@@ -415,7 +415,7 @@ function handleSearchForm(req, res) {
             font-weight: bold;
             color: #555;
         }
-        input[type="text"], input[type="number"] {
+        input[type="text"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -448,18 +448,12 @@ function handleSearchForm(req, res) {
         .required {
             color: red;
         }
-        .search-results {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 4px;
-            background-color: #f8f9fa;
-        }
     </style>
 </head>
 <body>
     <div class="form-container">
         <h1>Форма пошуку пристрою</h1>
-        <form id="searchForm">
+        <form action="/inventory" method="GET">
             <div class="form-group">
                 <label for="search_query">Серійний номер або ID пристрою <span class="required">*</span></label>
                 <input type="text" id="search_query" name="search_query" placeholder="Введіть ID або назву..." required>
@@ -474,49 +468,9 @@ function handleSearchForm(req, res) {
             
             <button type="submit">Пошук пристрою</button>
         </form>
-        
-        <div id="searchResults" class="search-results" style="display: none;">
-            <!-- Тут будуть відображатись результати пошуку -->
-        </div>
     </div>
-
-    <script>
-        document.getElementById('searchForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            const searchQuery = document.getElementById('search_query').value;
-            const includePhoto = document.getElementById('include_photo').checked;
-            
-            // Виконуємо пошук
-            searchDevice(searchQuery, includePhoto);
-        });
-
-        function searchDevice(query, includePhoto) {
-            const resultsDiv = document.getElementById('searchResults');
-            
-            // Спрощений пошук - у реальності тут буде запит до API
-            if (query.toLowerCase().includes('1') || query.toLowerCase().includes('планшет')) {
-                let description = "Знайдено пристрій: Планшет";
-                if (includePhoto) {
-                    description += " \\nФото: http://localhost:3000/inventory/1/photo";
-                }
-                
-             resultsDiv.innerHTML = `
-    <h3>Search Results:</h3>
-    <p><strong>ID:</strong> 1</p>
-    <p><strong>Name:</strong> Tablet</p>
-    <p><strong>Description:</strong> ${description}</p>
-`;
-                resultsDiv.style.display = 'block';
-            } else {
-                resultsDiv.innerHTML = '<p>Пристрій не знайдено</p>';
-                resultsDiv.style.display = 'block';
-            }
-        }
-    </script>
 </body>
-</html>
-  `;
+</html>`;
 
   res.writeHead(200, { 
     'Content-Type': 'text/html; charset=utf-8',
