@@ -26,125 +26,75 @@ const server = http.createServer((req, res) => {
   const method = req.method;
   console.log(`Отримано запит: ${method} ${url}`);
 
-  // Обробка кореневого шляху
+  // Корінь
   if (method === 'GET' && url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сервер інвентаризації працює!\n');
     return;
   }
 
-  // Обробка HTML форм
-  else if (method === 'GET' && url === '/RegisterForm.html') {
-    handleRegisterForm(req, res);
-    return;
-  }
-  else if (method === 'GET' && url === '/SearchForm.html') {
-    handleSearchForm(req, res);
-    return;
-  }
+  // HTML форми
+  if (method === 'GET' && url === '/RegisterForm.html') { handleRegisterForm(req, res); return; }
+  if (method === 'GET' && url === '/SearchForm.html') { handleSearchForm(req, res); return; }
 
-  // Обробка POST /register
-  else if (method === 'POST' && url === '/register') {
-    handleRegister(req, res);
-    return;
-  }
-
-  // Обробка GET /inventory
-  else if (method === 'GET' && (url === '/inventory' || url.startsWith('/inventory?'))) {
-    handleGetInventory(req, res);
-    return;
-  }
-
-  // Обробка POST /search
-  else if (url === '/search') {
-    if (method === 'POST') {
-      handleSearch(req, res);
-    } else {
-      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Method Not Allowed\n');
-    }
-    return;
-  }
-
-  // Обробка /inventory/{id} та пов'язаних маршрутів
-  else if (url.startsWith('/inventory/')) {
-    const urlParts = url.split('/');
-    const id = parseInt(urlParts[2]);
-    
-    if (isNaN(id)) {
-      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Невірний ID\n');
-      return;
-    }
-    
-    // Обробка фото
-    if (url.endsWith('/photo')) {
-      if (method === 'GET') {
-        handleGetInventoryItemPhoto(req, res);
-      } else if (method === 'PUT') {
-        handleUpdateInventoryItemPhoto(req, res);
-      } else {
-        res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end('Method Not Allowed\n');
-      }
-      return;
-    }
-    
-    // Обробка основних операцій з елементом
-    if (method === 'GET') {
-      handleGetInventoryItem(req, res);
-    } else if (method === 'PUT') {
-      handleUpdateInventoryItem(req, res);
-    } else if (method === 'DELETE') {
-      handleDeleteInventoryItem(req, res);
-    } else {
-      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Method Not Allowed\n');
-    }
-    return;
-  }
-
-  // Обробка /inventory (тільки GET)
-  else if (url === '/inventory') {
-    if (method === 'GET') {
-      handleGetInventory(req, res);
-    } else {
-      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Method Not Allowed\n');
-    }
-    return;
-  }
-
-  // Обробка /register (тільки POST)
-  else if (url === '/register') {
-    if (method === 'POST') {
-      handleRegister(req, res);
-    } else {
-      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Method Not Allowed\n');
-    }
-    return;
-  }
-    else if (url === '/inventory') {
-  if (method === 'POST') {
-    handleCreateInventoryItem(req, res);
-    return;
-  } else if (method === 'GET') {
-    handleGetInventory(req, res);
-    return;
-  } else {
+  // POST /register
+  if (url === '/register') {
+    if (method === 'POST') { handleRegister(req, res); return; }
     res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Method Not Allowed\n');
     return;
   }
-}
 
-
-  // Всі інші запити - 404
-  else {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Сторінку не знайдено\n');
+  // POST /search
+  if (url === '/search') {
+    if (method === 'POST') { handleSearch(req, res); return; }
+    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Method Not Allowed\n');
+    return;
   }
+
+  // /inventory і /inventory?...
+  if (url.startsWith('/inventory')) {
+    const urlParts = url.split('/');
+    const id = parseInt(urlParts[2]);
+
+    // /inventory/:id/photo
+    if (!isNaN(id) && url.endsWith('/photo')) {
+      if (method === 'GET') { handleGetInventoryItemPhoto(req, res); return; }
+      if (method === 'PUT') { handleUpdateInventoryItemPhoto(req, res); return; }
+      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Method Not Allowed\n');
+      return;
+    }
+
+    // /inventory/:id
+    if (!isNaN(id)) {
+      if (method === 'GET') { handleGetInventoryItem(req, res); return; }
+      if (method === 'PUT') { handleUpdateInventoryItem(req, res); return; }
+      if (method === 'DELETE') { handleDeleteInventoryItem(req, res); return; }
+      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Method Not Allowed\n');
+      return;
+    }
+
+    // /inventory (GET або POST)
+    if (url === '/inventory' || url.startsWith('/inventory?')) {
+      if (method === 'GET') { handleGetInventory(req, res); return; }
+      if (method === 'POST') { handleCreateInventoryItem(req, res); return; }
+      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Method Not Allowed\n');
+      return;
+    }
+
+    // Необроблене
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Невірний запит\n');
+    return;
+  }
+
+  // Всі інші - 404
+  res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('Сторінку не знайдено\n');
 });
 
 
