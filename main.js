@@ -26,6 +26,10 @@ const server = http.createServer((req, res) => {
   const method = req.method;
   console.log(`Отримано запит: ${method} ${url}`);
 
+    console.log('URL для порівняння:', JSON.stringify(url));
+  console.log('Чи дорівнює "/search":', url === '/search');
+  console.log('Чи починається з "/search":', url.startsWith('/search'));
+  
   if (method === 'GET' && url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сервер інвентаризації працює!\n');
