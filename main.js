@@ -375,10 +375,9 @@ function handleRegisterForm(req, res) {
     'Content-Length': Buffer.byteLength(htmlForm, 'utf8')
   });
   res.end(htmlForm);
- 
 }
  
-}
+
 // Обробка відображення форми пошуку
 function handleSearchForm(req, res) {
   const htmlForm = `
