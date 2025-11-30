@@ -83,7 +83,6 @@ server.listen(options.port, options.host, () => {
   console.log(`Сервер запущено на http://${options.host}:${options.port}`);
 });
 
-// Функції обробники
 function handleGetInventory(req, res) {
   const inventoryWithLinks = inventory.map(item => ({
     id: item.id,
@@ -278,7 +277,6 @@ function handleRegister(req, res) {
 
     console.log('Отримані поля:', fields);
     console.log('Отримані файли:', files);
-    // ... решта коду
 
     let inventoryName = '';
     let description = '';
