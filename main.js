@@ -258,6 +258,8 @@ function handleDeleteInventoryItem(req, res) {
 }
 
 function handleRegister(req, res) {
+  console.log('=== ПОЧАТОК ОБРОБКИ ФОРМИ ===');
+  
   const form = formidable({
     uploadDir: options.cache,
     keepExtensions: true,
@@ -265,8 +267,10 @@ function handleRegister(req, res) {
   });
 
   form.parse(req, (err, fields, files) => {
+    console.log('=== FORMIDABLE ЗАВЕРШИВ ПАРСИНГ ===');
+    
     if (err) {
-      console.error('Помилка при парсингу форми:', err);
+      console.error('ПОМИЛКА formidable:', err);
       res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Помилка при обробці форми\n');
       return;
@@ -274,6 +278,7 @@ function handleRegister(req, res) {
 
     console.log('Отримані поля:', fields);
     console.log('Отримані файли:', files);
+    // ... решта коду
 
     let inventoryName = '';
     let description = '';
