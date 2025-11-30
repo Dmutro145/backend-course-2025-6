@@ -512,6 +512,11 @@ function handleSearchForm(req, res) {
 }
 // Обробка пошуку пристрою за ID
 function handleSearch(req, res) {
+   if (req.method !== 'POST') {
+    res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Method Not Allowed\n');
+    return;
+  }
   let body = '';
   
   req.on('data', chunk => {
