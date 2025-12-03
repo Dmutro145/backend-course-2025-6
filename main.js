@@ -187,7 +187,7 @@ function handleUpdateInventoryItem(req, res) {
   });
 }
 
-function handleGetInventoryItemPhoto(req, res) {
+function handleUpdateInventoryItemPhoto(req, res) {
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
   
@@ -197,19 +197,23 @@ function handleGetInventoryItemPhoto(req, res) {
     return;
   }
   
-  const item = inventory.find(item => item.id === id);
+  // ШУКАЄМО пристрій
+  const itemIndex = inventory.findIndex(item => item.id === id);
   
-  if (!item) {
+  if (itemIndex === -1) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Пристрій не знайдено\n');
     return;
   }
 
- 
-
-  // ВИПРАВЛЕНО: тепер повертаємо image/jpeg
-  res.writeHead(200, { 'Content-Type': 'image/jpeg' });
-  res.end('Тимчасове фото (заглушка)\n');
+  // ПРОСТО встановлюємо фото БЕЗ перевірок файлу
+  inventory[itemIndex].photo = `/inventory/${id}/photo`;
+  
+  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify({ 
+    message: 'Фото оновлено', 
+    photo: inventory[itemIndex].photo  // ← завжди буде посилання
+  }));
 }
 
 function handleUpdateInventoryItemPhoto(req, res) {
