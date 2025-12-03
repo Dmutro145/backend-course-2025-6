@@ -542,7 +542,7 @@ function handleSearch(req, res) {
     }
   });
 }
-function handleCreateInventoryItem(req, res) {
+/*function handleCreateInventoryItem(req, res) {
   let body = '';
   req.on('data', chunk => body += chunk.toString());
   req.on('end', () => {
@@ -572,4 +572,4 @@ function handleCreateInventoryItem(req, res) {
     }
   });
 }
-
+*/
