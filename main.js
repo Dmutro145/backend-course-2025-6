@@ -270,7 +270,12 @@ function handleRegister(req, res) {
     if (photoFile && photoFile.size > 0) {
       photoPath = `/inventory/${nextId}/photo`;
     }
-
+if (photoFile && photoFile.size > 0) {
+  const fileName = `photo_${nextId}${path.extname(photoFile.originalFilename)}`;
+  const newPath = path.join(options.cache, fileName);
+  fs.renameSync(photoFile.filepath, newPath);
+  photoPath = `/inventory/${nextId}/photo`;
+}
     const newItem = {
       id: nextId++,
       name: inventoryName,
