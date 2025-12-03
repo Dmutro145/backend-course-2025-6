@@ -205,11 +205,7 @@ function handleGetInventoryItemPhoto(req, res) {
     return;
   }
 
-  if (!item.photo) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Фото не знайдено\n');
-    return;
-  }
+ 
 
   // ВИПРАВЛЕНО: тепер повертаємо image/jpeg
   res.writeHead(200, { 'Content-Type': 'image/jpeg' });
