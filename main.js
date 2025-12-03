@@ -237,9 +237,9 @@ function handleUpdateInventoryItemPhoto(req, res) {
     }
 
     const photoFile = Array.isArray(files.photo) ? files.photo[0] : files.photo;
-  if (photoFile) {
-  inventory[itemIndex].photo = `/inventory/${id}/photo`;
-}
+    if (photoFile) {
+      inventory[itemIndex].photo = `/inventory/${id}/photo`;
+    }
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ message: 'Фото оновлено', photo: inventory[itemIndex].photo }));
