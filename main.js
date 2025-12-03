@@ -488,46 +488,104 @@ function handleSearch(req, res) {
   });
 }
 function handleGetInventoryItemPhoto(req, res) {
+  console.log('=== GET PHOTO HANDLER ===');
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
 
   if (isNaN(id)) {
+    console.log('Invalid ID');
     res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Невірний ID\n');
     return;
   }
 
+  console.log('Looking for item with ID:', id);
   const item = inventory.find(item => item.id === id);
-  if (!item || !item.photo) {
+  
+  if (!item) {
+    console.log('Item not found in inventory');
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Пристрій не знайдено\n');
+    return;
+  }
+  
+  if (!item.photo) {
+    console.log('Item has no photo property');
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Фото не знайдено\n');
     return;
   }
 
   // Шукаємо файл у cache
+  console.log('Cache directory:', options.cache);
   const files = fs.readdirSync(options.cache);
-  const file = files.find(f => f.startsWith(`photo_${id}`));
-
-  if (!file) {
+  console.log('Files in cache:', files);
+  
+  // Пошук файлу з різними розширеннями
+  const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.jfif'];
+  let foundFile = null;
+  
+  for (const ext of possibleExtensions) {
+    const fileName = `photo_${id}${ext}`;
+    if (files.includes(fileName)) {
+      foundFile = fileName;
+      break;
+    }
+  }
+  
+  // Або пошук за префіксом
+  if (!foundFile) {
+    const prefixFiles = files.filter(f => f.startsWith(`photo_${id}`));
+    if (prefixFiles.length > 0) {
+      foundFile = prefixFiles[0];
+    }
+  }
+  
+  if (!foundFile) {
+    console.log('No photo file found in cache');
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Фото не знайдено у файловій системі\n');
     return;
   }
 
-  const filePath = path.join(options.cache, file);
+  console.log('Found file:', foundFile);
+  const filePath = path.join(options.cache, foundFile);
 
   // Визначаємо MIME-тип
-  const ext = path.extname(file).toLowerCase();
-  let mime = 'application/octet-stream';
+  const ext = path.extname(foundFile).toLowerCase();
+  console.log('File extension:', ext);
+  
+  const mimeTypes = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.jfif': 'image/jpeg',
+    '.webp': 'image/webp',
+  };
+  
+  const mime = mimeTypes[ext] || 'application/octet-stream';
+  console.log('MIME type:', mime);
 
-  if (ext === '.png') mime = 'image/png';
-  if (ext === '.jpg' || ext === '.jpeg') mime = 'image/jpeg';
-  if (ext === '.jfif') mime = 'image/jpeg';
-  if (ext === '.webp') mime = 'image/webp';
-
-  res.writeHead(200, { 'Content-Type': mime });
-
-  const stream = fs.createReadStream(filePath);
-  stream.pipe(res);
+  try {
+    const fileStats = fs.statSync(filePath);
+    console.log('File size:', fileStats.size);
+    
+    res.writeHead(200, { 
+      'Content-Type': mime,
+      'Content-Length': fileStats.size 
+    });
+    
+    const stream = fs.createReadStream(filePath);
+    stream.on('error', (err) => {
+      console.error('Stream error:', err);
+      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Помилка читання файлу\n');
+    });
+    stream.pipe(res);
+    
+  } catch (err) {
+    console.error('Error reading file:', err);
+    res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Помилка читання файлу\n');
+  }
 }
-
