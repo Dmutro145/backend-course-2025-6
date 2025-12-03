@@ -494,8 +494,13 @@ function handleSearch(req, res) {
 }
 function handleGetInventoryItemPhoto(req, res) {
   console.log('=== GET PHOTO HANDLER ===');
+  console.log('Full URL:', req.url);
+  
   const urlParts = req.url.split('/');
+  console.log('URL Parts:', urlParts);
+  
   const id = parseInt(urlParts[2]);
+  console.log('Parsed ID:', id);
 
   if (isNaN(id)) {
     console.log('Invalid ID');
@@ -504,8 +509,9 @@ function handleGetInventoryItemPhoto(req, res) {
     return;
   }
 
-  console.log('Looking for item with ID:', id);
+  console.log('Current inventory:', JSON.stringify(inventory, null, 2));
   const item = inventory.find(item => item.id === id);
+  console.log('Found item:', item);
   
   if (!item) {
     console.log('Item not found in inventory');
@@ -514,6 +520,7 @@ function handleGetInventoryItemPhoto(req, res) {
     return;
   }
   
+  console.log('Item photo property:', item.photo);
   if (!item.photo) {
     console.log('Item has no photo property');
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -524,39 +531,40 @@ function handleGetInventoryItemPhoto(req, res) {
   // Шукаємо файл у cache
   console.log('Cache directory:', options.cache);
   const files = fs.readdirSync(options.cache);
-  console.log('Files in cache:', files);
+  console.log('All files in cache:', files);
   
-  // Пошук файлу з різними розширеннями
- const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.jfif', '.gif', '.bmp'];
+  const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.jfif', '.gif', '.bmp'];
   let foundFile = null;
   
   for (const ext of possibleExtensions) {
     const fileName = `photo_${id}${ext}`;
+    console.log(`Looking for: ${fileName}`);
     if (files.includes(fileName)) {
       foundFile = fileName;
+      console.log(`✓ Found: ${foundFile}`);
       break;
     }
   }
   
-  // Або пошук за префіксом
   if (!foundFile) {
     const prefixFiles = files.filter(f => f.startsWith(`photo_${id}`));
+    console.log(`Files with prefix "photo_${id}":`, prefixFiles);
     if (prefixFiles.length > 0) {
       foundFile = prefixFiles[0];
+      console.log(`✓ Found by prefix: ${foundFile}`);
     }
   }
   
   if (!foundFile) {
-    console.log('No photo file found in cache');
+    console.log(' No photo file found');
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Фото не знайдено у файловій системі\n');
     return;
   }
 
-  console.log('Found file:', foundFile);
   const filePath = path.join(options.cache, foundFile);
+  console.log('Full file path:', filePath);
 
-  // Визначаємо MIME-тип
   const ext = path.extname(foundFile).toLowerCase();
   console.log('File extension:', ext);
   
@@ -566,7 +574,8 @@ function handleGetInventoryItemPhoto(req, res) {
     '.jpeg': 'image/jpeg',
     '.jfif': 'image/jpeg',
     '.webp': 'image/webp',
-    '.webp': 'image/webp',
+    '.gif': 'image/gif',
+    '.bmp': 'image/bmp',
   };
   
   const mime = mimeTypes[ext] || 'application/octet-stream';
@@ -588,9 +597,10 @@ function handleGetInventoryItemPhoto(req, res) {
       res.end('Помилка читання файлу\n');
     });
     stream.pipe(res);
+    console.log('✓ Stream started');
     
   } catch (err) {
-    console.error('Error reading file:', err);
+    console.error(' Error reading file:', err);
     res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Помилка читання файлу\n');
   }
