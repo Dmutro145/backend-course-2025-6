@@ -77,14 +77,17 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // /inventory (GET або POST)
-    if (url === '/inventory' || url.startsWith('/inventory?')) {
-      if (method === 'GET') { handleGetInventory(req, res); return; }
-      if (method === 'POST') { handleCreateInventoryItem(req, res); return; }
-      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Method Not Allowed\n');
-      return;
-    }
+ // /inventory (GET або POST)
+if (url === '/inventory' || url === '/inventory/' || url.startsWith('/inventory?')) {
+  if (method === 'GET') { 
+    console.log('Викликаємо handleGetInventory'); // ← Додайте для відладки
+    handleGetInventory(req, res); 
+    return; 
+  }
+  res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('Method Not Allowed\n');
+  return;
+}
 
     // Необроблене
     res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -102,7 +105,9 @@ server.listen(options.port, options.host, () => {
   console.log(`Сервер запущено на http://${options.host}:${options.port}`);
 });
 
+
 function handleGetInventory(req, res) {
+   console.log('handleGetInventory викликано!');
   const inventoryWithLinks = inventory.map(item => ({
     id: item.id,
     name: item.name,
