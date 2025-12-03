@@ -490,29 +490,44 @@ function handleSearch(req, res) {
 function handleGetInventoryItemPhoto(req, res) {
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
-  
+
   if (isNaN(id)) {
     res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Невірний ID\n');
     return;
   }
-  
-  const item = inventory.find(item => item.id === id);
-  
-  if (!item) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Пристрій не знайдено\n');
-    return;
-  }
 
-  if (!item.photo) {
+  const item = inventory.find(item => item.id === id);
+  if (!item || !item.photo) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Фото не знайдено\n');
     return;
   }
 
-  // Заглушка: завжди повертаємо простий текст
-  res.writeHead(200, { 'Content-Type': 'image/jpeg' });
-  res.end('Фото пристрою (заглушка)');
+  // Шукаємо файл у cache
+  const files = fs.readdirSync(options.cache);
+  const file = files.find(f => f.startsWith(`photo_${id}`));
+
+  if (!file) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Фото не знайдено у файловій системі\n');
+    return;
+  }
+
+  const filePath = path.join(options.cache, file);
+
+  // Визначаємо MIME-тип
+  const ext = path.extname(file).toLowerCase();
+  let mime = 'application/octet-stream';
+
+  if (ext === '.png') mime = 'image/png';
+  if (ext === '.jpg' || ext === '.jpeg') mime = 'image/jpeg';
+  if (ext === '.jfif') mime = 'image/jpeg';
+  if (ext === '.webp') mime = 'image/webp';
+
+  res.writeHead(200, { 'Content-Type': mime });
+
+  const stream = fs.createReadStream(filePath);
+  stream.pipe(res);
 }
 
