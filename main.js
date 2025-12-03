@@ -522,7 +522,7 @@ function handleGetInventoryItemPhoto(req, res) {
   console.log('Files in cache:', files);
   
   // Пошук файлу з різними розширеннями
-  const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.jfif'];
+ const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.jfif', '.gif', '.bmp'];
   let foundFile = null;
   
   for (const ext of possibleExtensions) {
@@ -560,6 +560,7 @@ function handleGetInventoryItemPhoto(req, res) {
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
     '.jfif': 'image/jpeg',
+    '.webp': 'image/webp',
     '.webp': 'image/webp',
   };
   
