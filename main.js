@@ -149,72 +149,15 @@ function handleGetInventoryItem(req, res) {
 function handleUpdateInventoryItemPhoto(req, res) {
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
-  
+
   if (isNaN(id)) {
     res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Невірний ID\n');
     return;
   }
-  
+
   const itemIndex = inventory.findIndex(item => item.id === id);
-  
-  if (itemIndex === -1) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Пристрій не знайдено\n');
-    return;
-  }
 
-  // ПРОСТО встановлюємо фото БЕЗ жодних перевірок
-  inventory[itemIndex].photo = `/inventory/${id}/photo`;
-  
-  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify({ 
-    message: 'Фото оновлено', 
-    photo: inventory[itemIndex].photo  // ← тут буде "/inventory/1/photo"
-  }));
-}
-
-function handleUpdateInventoryItemPhoto(req, res) {
-  const urlParts = req.url.split('/');
-  const id = parseInt(urlParts[2]);
-  
-  if (isNaN(id)) {
-    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Невірний ID\n');
-    return;
-  }
-  
-  // ШУКАЄМО пристрій
-  const itemIndex = inventory.findIndex(item => item.id === id);
-  
-  if (itemIndex === -1) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Пристрій не знайдено\n');
-    return;
-  }
-
-  // ПРОСТО встановлюємо фото БЕЗ перевірок файлу
-  inventory[itemIndex].photo = `/inventory/${id}/photo`;
-  
-  res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-  res.end(JSON.stringify({ 
-    message: 'Фото оновлено', 
-    photo: inventory[itemIndex].photo  // ← завжди буде посилання
-  }));
-}
-
-function handleUpdateInventoryItemPhoto(req, res) {
-  const urlParts = req.url.split('/');
-  const id = parseInt(urlParts[2]);
-  
-  if (isNaN(id)) {
-    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Невірний ID\n');
-    return;
-  }
-  
-  const itemIndex = inventory.findIndex(item => item.id === id);
-  
   if (itemIndex === -1) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Пристрій не знайдено\n');
@@ -223,26 +166,36 @@ function handleUpdateInventoryItemPhoto(req, res) {
 
   const form = formidable({
     uploadDir: options.cache,
-    keepExtensions: true,
-    multiples: false,
-    allowEmptyFiles: true,
-    minFileSize: 0
+    keepExtensions: true
   });
 
   form.parse(req, (err, fields, files) => {
     if (err) {
       res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Помилка при обробці фото\n');
+      res.end('Помилка при завантаженні фото\n');
       return;
     }
 
     const photoFile = Array.isArray(files.photo) ? files.photo[0] : files.photo;
-    if (photoFile) {
-      inventory[itemIndex].photo = `/inventory/${id}/photo`;
+
+    if (!photoFile || photoFile.size === 0) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Файл фото не передано\n');
+      return;
     }
 
+    const fileName = `photo_${id}${path.extname(photoFile.originalFilename)}`;
+    const newPath = path.join(options.cache, fileName);
+
+    fs.renameSync(photoFile.filepath, newPath);
+
+    inventory[itemIndex].photo = `/inventory/${id}/photo`;
+
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ message: 'Фото оновлено', photo: inventory[itemIndex].photo }));
+    res.end(JSON.stringify({
+      message: 'Фото оновлено',
+      photo: inventory[itemIndex].photo
+    }));
   });
 }
 
@@ -534,34 +487,31 @@ function handleSearch(req, res) {
     }
   });
 }
-/*function handleCreateInventoryItem(req, res) {
-  let body = '';
-  req.on('data', chunk => body += chunk.toString());
-  req.on('end', () => {
-    try {
-      const data = JSON.parse(body);
+function handleGetInventoryItemPhoto(req, res) {
+  const urlParts = req.url.split('/');
+  const id = parseInt(urlParts[2]);
 
-      if (!data.name) {
-        res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end('Ім\'я пристрою є обов\'язковим\n');
-        return;
-      }
+  const item = inventory.find(item => item.id === id);
 
-      const newItem = {
-        id: nextId++,
-        name: data.name,
-        description: data.description || '',
-        photo: null
-      };
+  if (!item || !item.photo) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Фото не знайдено\n');
+    return;
+  }
 
-      inventory.push(newItem);
+  const fileName = `photo_${id}`;
+  const files = fs.readdirSync(options.cache);
+  const file = files.find(f => f.startsWith(fileName));
 
-      res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(newItem));
-    } catch (err) {
-      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Невірний JSON\n');
-    }
-  });
+  if (!file) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Фото не знайдено\n');
+    return;
+  }
+
+  const filePath = path.join(options.cache, file);
+  const fileStream = fs.createReadStream(filePath);
+  res.writeHead(200, { 'Content-Type': 'image/jpeg' });
+  fileStream.pipe(res);
 }
-*/
+
