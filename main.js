@@ -490,28 +490,29 @@ function handleSearch(req, res) {
 function handleGetInventoryItemPhoto(req, res) {
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
-
+  
+  if (isNaN(id)) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Невірний ID\n');
+    return;
+  }
+  
   const item = inventory.find(item => item.id === id);
+  
+  if (!item) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Пристрій не знайдено\n');
+    return;
+  }
 
-  if (!item || !item.photo) {
+  if (!item.photo) {
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Фото не знайдено\n');
     return;
   }
 
-  const fileName = `photo_${id}`;
-  const files = fs.readdirSync(options.cache);
-  const file = files.find(f => f.startsWith(fileName));
-
-  if (!file) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Фото не знайдено\n');
-    return;
-  }
-
-  const filePath = path.join(options.cache, file);
-  const fileStream = fs.createReadStream(filePath);
+  // Заглушка: завжди повертаємо простий текст
   res.writeHead(200, { 'Content-Type': 'image/jpeg' });
-  fileStream.pipe(res);
+  res.end('Фото пристрою (заглушка)');
 }
 
