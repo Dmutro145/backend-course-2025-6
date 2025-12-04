@@ -268,7 +268,12 @@ function handleRegister(req, res) {
     let photoPath = null;
     const photoFile = Array.isArray(files.photo) ? files.photo[0] : files.photo;
     if (photoFile && photoFile.size > 0) {
-      photoPath = `/inventory/${nextId}/photo`;
+     const fileName = `photo_${nextId}${path.extname(photoFile.originalFilename)}`;
+const newPath = path.join(options.cache, fileName);
+fs.renameSync(photoFile.filepath, newPath);
+
+photoPath = fileName; // ← зберігаємо ім’я файлу
+
     }
 if (photoFile && photoFile.size > 0) {
   const fileName = `photo_${nextId}${path.extname(photoFile.originalFilename)}`;
@@ -501,7 +506,7 @@ function handleGetInventoryItemPhoto(req, res) {
   
   const id = parseInt(urlParts[2]);
   console.log('Parsed ID:', id);
-
+const filePath = path.join(options.cache, item.photo);
   if (isNaN(id)) {
     console.log('Invalid ID');
     res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
