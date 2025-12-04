@@ -506,7 +506,6 @@ function handleGetInventoryItemPhoto(req, res) {
   
   const id = parseInt(urlParts[2]);
   console.log('Parsed ID:', id);
-const filePath = path.join(options.cache, item.photo);
   if (isNaN(id)) {
     console.log('Invalid ID');
     res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
