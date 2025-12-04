@@ -265,14 +265,18 @@ function handleRegister(req, res) {
       return;
     }
 
-    let photoPath = null;
-    const photoFile = Array.isArray(files.photo) ? files.photo[0] : files.photo;
-    if (photoFile && photoFile.size > 0) {
-     const fileName = `photo_${nextId}${path.extname(photoFile.originalFilename)}`;
-const newPath = path.join(options.cache, fileName);
-fs.renameSync(photoFile.filepath, newPath);
+  let photoPath = null;
+const photoFile = Array.isArray(files.photo) ? files.photo[0] : files.photo;
 
-photoPath = fileName; // ← зберігаємо ім’я файлу
+if (photoFile && photoFile.size > 0) {
+  const fileName = `photo_${nextId}${path.extname(photoFile.originalFilename)}`;
+  const newPath = path.join(options.cache, fileName);
+  fs.renameSync(photoFile.filepath, newPath);
+
+  // зберігаємо правильний URL
+  photoPath = `/inventory/${nextId}/photo`;
+}
+
 
     }
 if (photoFile && photoFile.size > 0) {
