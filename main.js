@@ -68,14 +68,14 @@ const server = http.createServer((req, res) => {
     const id = parts.length > 1 ? parseInt(parts[1]) : NaN;
     const action = parts[2];
 
-    if (urlPath === '/inventory' || urlPath === '/inventory/') {
+    if (parts.length === 1) {
       if (method === 'GET') {
         handleGetInventory(req, res);
         return;
       }
     }
 
-    if (!isNaN(id) && !action && parts.length === 2) {
+    if (!isNaN(id) && parts.length === 2) {
       if (method === 'GET') {
         handleGetInventoryItem(req, res, id);
         return;
