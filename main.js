@@ -524,25 +524,23 @@ function handleGetInventoryItemPhoto(req, res) {
     return;
   }
 
-  // Шукаємо файл у cache
   console.log('Cache directory:', options.cache);
   const files = fs.readdirSync(options.cache);
   console.log('All files in cache:', files);
   
-  // Шукаємо фото з правильним ім'ям
   let foundFile = null;
-  
-  // Спочатку шукаємо точно photo_{id}.ext
-  const exactMatch = files.find(f => f === `photo_${id}.jpg` || 
-                                   f === `photo_${id}.jpeg` || 
-                                   f === `photo_${id}.png` || 
-                                   f === `photo_${id}.webp`);
-  
+
+  const exactMatch = files.find(f =>
+       f === `photo_${id}.jpg`
+    || f === `photo_${id}.jpeg`
+    || f === `photo_${id}.png`
+    || f === `photo_${id}.webp`
+  );
+
   if (exactMatch) {
     foundFile = exactMatch;
     console.log(`✓ Exact match found: ${foundFile}`);
   } else {
-    // Шукаємо за префіксом
     const prefixFiles = files.filter(f => f.startsWith(`photo_${id}`));
     console.log(`Files with prefix "photo_${id}":`, prefixFiles);
     if (prefixFiles.length > 0) {
