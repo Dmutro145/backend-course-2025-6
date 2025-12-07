@@ -173,12 +173,18 @@ function handleUpdateInventoryItem(req, res) {
     try {
       const data = JSON.parse(body);
       
-      if (data.name) inventory[itemIndex].name = data.name;
-      if (data.description) inventory[itemIndex].description = data.description;
+      if (data.name !== undefined) inventory[itemIndex].name = data.name;
+      if (data.description !== undefined) inventory[itemIndex].description = data.description;
+
+      const itemWithPhoto = {
+        ...inventory[itemIndex],
+        photo: inventory[itemIndex].photo ? `http://${options.host}:${options.port}${inventory[itemIndex].photo}` : null
+      };
 
       res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(inventory[itemIndex]));
+      res.end(JSON.stringify(itemWithPhoto));
     } catch (error) {
+      console.error('Parse error:', error);
       res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Помилка при обробці запиту\n');
     }
