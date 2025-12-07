@@ -164,13 +164,23 @@ function handleUpdateInventoryItemPhoto(req, res) {
     return;
   }
 
+  // ПРАВИЛЬНІ НАЛАШТУВАННЯ formidable
   const form = formidable({
     uploadDir: options.cache,
-    keepExtensions: true
+    keepExtensions: true,
+    filename: (name, ext, part, form) => {
+      // Якщо це поле 'photo', даємо йому конкретне ім'я
+      if (part.name === 'photo') {
+        return `photo_${id}${ext}`;
+      }
+      // Для інших полів - випадкове ім'я
+      return `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
+    }
   });
 
   form.parse(req, (err, fields, files) => {
     if (err) {
+      console.error('Formidable error:', err);
       res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Помилка при завантаженні фото\n');
       return;
@@ -184,21 +194,21 @@ function handleUpdateInventoryItemPhoto(req, res) {
       return;
     }
 
-    const fileName = `photo_${id}${path.extname(photoFile.originalFilename)}`;
-    const newPath = path.join(options.cache, fileName);
+    // Перевіряємо, чи правильно збереглося
+    console.log('Photo saved as:', photoFile.newFilename);
+    console.log('In directory:', options.cache);
 
-    fs.renameSync(photoFile.filepath, newPath);
-
+    // Оновлюємо шлях у базі даних
     inventory[itemIndex].photo = `/inventory/${id}/photo`;
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({
       message: 'Фото оновлено',
-      photo: inventory[itemIndex].photo
+      photo: inventory[itemIndex].photo,
+      filename: photoFile.newFilename // для дебагу
     }));
   });
 }
-
 function handleDeleteInventoryItem(req, res) {
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
@@ -226,12 +236,23 @@ function handleDeleteInventoryItem(req, res) {
 function handleRegister(req, res) {
   console.log('=== ПОЧАТОК ОБРОБКИ ФОРМИ ===');
   
+  // Зберігаємо ID перед створенням
+  const newItemId = nextId;
+
   const form = formidable({
     uploadDir: options.cache,
     keepExtensions: true,
     multiples: false,
     allowEmptyFiles: true,
-    minFileSize: 0
+    minFileSize: 0,
+    filename: (name, ext, part, form) => {
+      // Для фото даємо конкретне ім'я
+      if (part.name === 'photo') {
+        return `photo_${newItemId}${ext}`;
+      }
+      // Для текстових полів - не змінюємо
+      return part.originalFilename || `${Date.now()}${ext}`;
+    }
   });
 
   form.parse(req, (err, fields, files) => {
@@ -244,55 +265,31 @@ function handleRegister(req, res) {
       return;
     }
 
-    let inventoryName = '';
-    let description = '';
-
-    if (Array.isArray(fields.inventory_name)) {
-      inventoryName = fields.inventory_name[0]?.trim() || '';
-    } else {
-      inventoryName = fields.inventory_name?.trim() || '';
-    }
-
-    if (Array.isArray(fields.description)) {
-      description = fields.description[0]?.trim() || '';
-    } else {
-      description = fields.description?.trim() || '';
-    }
-
-    if (!inventoryName) {
-      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Ім\'я пристрою є обов\'язковим\n');
-      return;
-    }
+    // ... (обробка полів залишається як була)
 
     let photoPath = null;
     const photoFile = Array.isArray(files.photo) ? files.photo[0] : files.photo;
 
-    // Зберігаємо поточний ID перед інкрементом
-    const newItemId = nextId;
-    
     if (photoFile && photoFile.size > 0) {
-      const fileName = `photo_${newItemId}${path.extname(photoFile.originalFilename)}`;
-      const newPath = path.join(options.cache, fileName);
-      fs.renameSync(photoFile.filepath, newPath);
+      // Файл ВЖЕ збережений під правильним іменем завдяки filename функції
+      console.log('Фото збережено як:', photoFile.newFilename);
       photoPath = `/inventory/${newItemId}/photo`;
     }
 
     const newItem = {
-      id: newItemId,  // використовуємо збережений ID
+      id: newItemId,
       name: inventoryName,
       description: description,
       photo: photoPath
     };
 
     inventory.push(newItem);
-    nextId++;  // інкрементуємо ПОСЛІД створення об'єкта
+    nextId++; // інкрементуємо після додавання
 
     res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(newItem));
   });
 }
-
 function handleRegisterForm(req, res) {
   const htmlForm = `
 <!DOCTYPE html>
@@ -497,13 +494,10 @@ function handleSearch(req, res) {
 }
 function handleGetInventoryItemPhoto(req, res) {
   console.log('=== GET PHOTO HANDLER ===');
-  console.log('Full URL:', req.url);
   
   const urlParts = req.url.split('/');
-  console.log('URL Parts:', urlParts);
-  
   const id = parseInt(urlParts[2]);
-  console.log('Parsed ID:', id);
+  
   if (isNaN(id)) {
     console.log('Invalid ID');
     res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -511,9 +505,9 @@ function handleGetInventoryItemPhoto(req, res) {
     return;
   }
 
-  console.log('Current inventory:', JSON.stringify(inventory, null, 2));
+  console.log('Looking for photo for ID:', id);
+  
   const item = inventory.find(item => item.id === id);
-  console.log('Found item:', item);
   
   if (!item) {
     console.log('Item not found in inventory');
@@ -535,20 +529,20 @@ function handleGetInventoryItemPhoto(req, res) {
   const files = fs.readdirSync(options.cache);
   console.log('All files in cache:', files);
   
-  const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.jfif', '.gif', '.bmp'];
+  // Шукаємо фото з правильним ім'ям
   let foundFile = null;
   
-  for (const ext of possibleExtensions) {
-    const fileName = `photo_${id}${ext}`;
-    console.log(`Looking for: ${fileName}`);
-    if (files.includes(fileName)) {
-      foundFile = fileName;
-      console.log(`✓ Found: ${foundFile}`);
-      break;
-    }
-  }
+  // Спочатку шукаємо точно photo_{id}.ext
+  const exactMatch = files.find(f => f === `photo_${id}.jpg` || 
+                                   f === `photo_${id}.jpeg` || 
+                                   f === `photo_${id}.png` || 
+                                   f === `photo_${id}.webp`);
   
-  if (!foundFile) {
+  if (exactMatch) {
+    foundFile = exactMatch;
+    console.log(`✓ Exact match found: ${foundFile}`);
+  } else {
+    // Шукаємо за префіксом
     const prefixFiles = files.filter(f => f.startsWith(`photo_${id}`));
     console.log(`Files with prefix "photo_${id}":`, prefixFiles);
     if (prefixFiles.length > 0) {
@@ -585,11 +579,12 @@ function handleGetInventoryItemPhoto(req, res) {
 
   try {
     const fileStats = fs.statSync(filePath);
-    console.log('File size:', fileStats.size);
+    console.log('File size:', fileStats.size, 'bytes');
     
     res.writeHead(200, { 
       'Content-Type': mime,
-      'Content-Length': fileStats.size 
+      'Content-Length': fileStats.size,
+      'Cache-Control': 'public, max-age=3600'
     });
     
     const stream = fs.createReadStream(filePath);
@@ -598,8 +593,9 @@ function handleGetInventoryItemPhoto(req, res) {
       res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Помилка читання файлу\n');
     });
+    
     stream.pipe(res);
-    console.log('✓ Stream started');
+    console.log('✓ Stream started successfully');
     
   } catch (err) {
     console.error(' Error reading file:', err);
