@@ -223,7 +223,7 @@ function handleDeleteInventoryItem(req, res) {
   res.end(JSON.stringify({ message: 'Пристрій видалено', item: deletedItem }));
 }
 
-function handleRegister(req, res) {
+ffunction handleRegister(req, res) {
   console.log('=== ПОЧАТОК ОБРОБКИ ФОРМИ ===');
   
   const form = formidable({
@@ -268,21 +268,25 @@ function handleRegister(req, res) {
     let photoPath = null;
     const photoFile = Array.isArray(files.photo) ? files.photo[0] : files.photo;
 
+    // Зберігаємо поточний ID перед інкрементом
+    const newItemId = nextId;
+    
     if (photoFile && photoFile.size > 0) {
-      const fileName = `photo_${nextId}${path.extname(photoFile.originalFilename)}`;
+      const fileName = `photo_${newItemId}${path.extname(photoFile.originalFilename)}`;
       const newPath = path.join(options.cache, fileName);
       fs.renameSync(photoFile.filepath, newPath);
-      photoPath = `/inventory/${nextId}/photo`;
+      photoPath = `/inventory/${newItemId}/photo`;
     }
 
     const newItem = {
-      id: nextId++,
+      id: newItemId,  // використовуємо збережений ID
       name: inventoryName,
       description: description,
       photo: photoPath
     };
 
     inventory.push(newItem);
+    nextId++;  // інкрементуємо ПОСЛІД створення об'єкта
 
     res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(newItem));
