@@ -199,7 +199,8 @@ function handleUpdateInventoryItemPhoto(req, res) {
     console.log('In directory:', options.cache);
 
     // Оновлюємо шлях у базі даних
-    inventory[itemIndex].photo = `/inventory/${id}/photo`;
+   inventory[itemIndex].photo = newPath; // також реальний шлях
+
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({
@@ -273,7 +274,8 @@ function handleRegister(req, res) {
     if (photoFile && photoFile.size > 0) {
       // Файл ВЖЕ збережений під правильним іменем завдяки filename функції
       console.log('Фото збережено як:', photoFile.newFilename);
-      photoPath = `/inventory/${newItemId}/photo`;
+      photoPath = newPath; // зберігаємо реальний шлях
+
     }
 
     const newItem = {
@@ -507,7 +509,7 @@ function handleGetInventoryItemPhoto(req, res) {
 
   console.log('Looking for photo for ID:', id);
   
-  const item = inventory.find(item => item.id === id);
+     const filePath = item.photo;
   
   if (!item) {
     console.log('Item not found in inventory');
