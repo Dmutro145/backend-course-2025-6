@@ -223,7 +223,7 @@ function handleDeleteInventoryItem(req, res) {
   res.end(JSON.stringify({ message: 'Пристрій видалено', item: deletedItem }));
 }
 
-ffunction handleRegister(req, res) {
+function handleRegister(req, res) {
   console.log('=== ПОЧАТОК ОБРОБКИ ФОРМИ ===');
   
   const form = formidable({
