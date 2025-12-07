@@ -77,17 +77,17 @@ const server = http.createServer((req, res) => {
       return;
     }
 
-    // /inventory (GET або POST)
-    if (url === '/inventory' || url === '/inventory/' || url.startsWith('/inventory?')) {
-      if (method === 'GET') { 
-        console.log('Викликаємо handleGetInventory');
-        handleGetInventory(req, res); 
-        return; 
-      }
-      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Method Not Allowed\n');
-      return;
-    }
+ // /inventory (GET або POST)
+if (url === '/inventory' || url === '/inventory/' || url.startsWith('/inventory?')) {
+  if (method === 'GET') { 
+    console.log('Викликаємо handleGetInventory'); // ← Додайте для відладки
+    handleGetInventory(req, res); 
+    return; 
+  }
+  res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end('Method Not Allowed\n');
+  return;
+}
 
     // Необроблене
     res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
@@ -107,7 +107,7 @@ server.listen(options.port, options.host, () => {
 
 
 function handleGetInventory(req, res) {
-  console.log('handleGetInventory викликано!');
+   console.log('handleGetInventory викликано!');
   const inventoryWithLinks = inventory.map(item => ({
     id: item.id,
     name: item.name,
@@ -146,51 +146,6 @@ function handleGetInventoryItem(req, res) {
   res.end(JSON.stringify(itemWithPhoto));
 }
 
-function handleUpdateInventoryItem(req, res) {
-  const urlParts = req.url.split('/');
-  const id = parseInt(urlParts[2]);
-
-  if (isNaN(id)) {
-    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Невірний ID\n');
-    return;
-  }
-
-  const itemIndex = inventory.findIndex(item => item.id === id);
-
-  if (itemIndex === -1) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Пристрій не знайдено\n');
-    return;
-  }
-
-  let body = '';
-  req.on('data', chunk => {
-    body += chunk.toString();
-  });
-
-  req.on('end', () => {
-    try {
-      const data = JSON.parse(body);
-      
-      if (data.name !== undefined) inventory[itemIndex].name = data.name;
-      if (data.description !== undefined) inventory[itemIndex].description = data.description;
-
-      const itemWithPhoto = {
-        ...inventory[itemIndex],
-        photo: inventory[itemIndex].photo ? `http://${options.host}:${options.port}${inventory[itemIndex].photo}` : null
-      };
-
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(itemWithPhoto));
-    } catch (error) {
-      console.error('Parse error:', error);
-      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Помилка при обробці запиту\n');
-    }
-  });
-}
-
 function handleUpdateInventoryItemPhoto(req, res) {
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
@@ -209,13 +164,16 @@ function handleUpdateInventoryItemPhoto(req, res) {
     return;
   }
 
+  // ПРАВИЛЬНІ НАЛАШТУВАННЯ formidable
   const form = formidable({
     uploadDir: options.cache,
     keepExtensions: true,
     filename: (name, ext, part, form) => {
+      // Якщо це поле 'photo', даємо йому конкретне ім'я
       if (part.name === 'photo') {
         return `photo_${id}${ext}`;
       }
+      // Для інших полів - випадкове ім'я
       return `${Date.now()}-${Math.round(Math.random() * 1E9)}${ext}`;
     }
   });
@@ -236,21 +194,22 @@ function handleUpdateInventoryItemPhoto(req, res) {
       return;
     }
 
+    // Перевіряємо, чи правильно збереглося
     console.log('Photo saved as:', photoFile.newFilename);
     console.log('In directory:', options.cache);
 
-    const photoPath = `/inventory/${id}/photo`;
-    inventory[itemIndex].photo = photoPath;
+    // Оновлюємо шлях у базі даних
+   inventory[itemIndex].photo = newPath; // також реальний шлях
+
 
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({
       message: 'Фото оновлено',
       photo: inventory[itemIndex].photo,
-      filename: photoFile.newFilename
+      filename: photoFile.newFilename // для дебагу
     }));
   });
 }
-
 function handleDeleteInventoryItem(req, res) {
   const urlParts = req.url.split('/');
   const id = parseInt(urlParts[2]);
@@ -278,6 +237,7 @@ function handleDeleteInventoryItem(req, res) {
 function handleRegister(req, res) {
   console.log('=== ПОЧАТОК ОБРОБКИ ФОРМИ ===');
   
+  // Зберігаємо ID перед створенням
   const newItemId = nextId;
 
   const form = formidable({
@@ -287,9 +247,11 @@ function handleRegister(req, res) {
     allowEmptyFiles: true,
     minFileSize: 0,
     filename: (name, ext, part, form) => {
+      // Для фото даємо конкретне ім'я
       if (part.name === 'photo') {
         return `photo_${newItemId}${ext}`;
       }
+      // Для текстових полів - не змінюємо
       return part.originalFilename || `${Date.now()}${ext}`;
     }
   });
@@ -304,15 +266,16 @@ function handleRegister(req, res) {
       return;
     }
 
-    const inventoryName = Array.isArray(fields.inventory_name) ? fields.inventory_name[0] : fields.inventory_name;
-    const description = Array.isArray(fields.description) ? fields.description[0] : fields.description;
+    // ... (обробка полів залишається як була)
 
     let photoPath = null;
     const photoFile = Array.isArray(files.photo) ? files.photo[0] : files.photo;
 
     if (photoFile && photoFile.size > 0) {
+      // Файл ВЖЕ збережений під правильним іменем завдяки filename функції
       console.log('Фото збережено як:', photoFile.newFilename);
-      photoPath = `/inventory/${newItemId}/photo`;
+      photoPath = newPath; // зберігаємо реальний шлях
+
     }
 
     const newItem = {
@@ -323,15 +286,12 @@ function handleRegister(req, res) {
     };
 
     inventory.push(newItem);
-    nextId++;
-
-    console.log('Нова позиція додана:', newItem);
+    nextId++; // інкрементуємо після додавання
 
     res.writeHead(201, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify(newItem));
   });
 }
-
 function handleRegisterForm(req, res) {
   const htmlForm = `
 <!DOCTYPE html>
@@ -534,7 +494,6 @@ function handleSearch(req, res) {
     }
   });
 }
-
 function handleGetInventoryItemPhoto(req, res) {
   console.log('=== GET PHOTO HANDLER ===');
   
@@ -550,7 +509,7 @@ function handleGetInventoryItemPhoto(req, res) {
 
   console.log('Looking for photo for ID:', id);
   
-  const item = inventory.find(item => item.id === id);
+     const filePath = item.photo;
   
   if (!item) {
     console.log('Item not found in inventory');
@@ -593,7 +552,7 @@ function handleGetInventoryItemPhoto(req, res) {
   }
   
   if (!foundFile) {
-    console.log('No photo file found');
+    console.log(' No photo file found');
     res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Фото не знайдено у файловій системі\n');
     return;
@@ -639,7 +598,7 @@ function handleGetInventoryItemPhoto(req, res) {
     console.log('✓ Stream started successfully');
     
   } catch (err) {
-    console.error('Error reading file:', err);
+    console.error(' Error reading file:', err);
     res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Помилка читання файлу\n');
   }
