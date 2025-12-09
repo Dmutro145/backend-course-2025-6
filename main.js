@@ -560,3 +560,27 @@ function handleGetInventoryItemPhoto(req, res, id) {
     res.end(JSON.stringify({ error: 'Помилка читання файлу' }));
   }
 }
+function handleRegisterForm(req, res) {
+  const filePath = path.join(__dirname, 'RegisterForm.html');
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Форма реєстрації не знайдена');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(data);
+  });
+}
+function handleSearchForm(req, res) {
+  const filePath = path.join(__dirname, 'SearchForm.html');
+  fs.readFile(filePath, (err, data) => {
+    if (err) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Форма пошуку не знайдена');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(data);
+  });
+}
