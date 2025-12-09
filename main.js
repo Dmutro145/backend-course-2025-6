@@ -26,12 +26,14 @@ const server = http.createServer((req, res) => {
   const method = req.method;
   console.log('Отримано запит: ' + method + ' ' + url);
 
+  // Головна сторінка
   if (method === 'GET' && url === '/') {
     res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Сервер інвентаризації працює!\n');
     return;
   }
 
+  // HTML форми
   if (method === 'GET' && url === '/RegisterForm.html') {
     handleRegisterForm(req, res);
     return;
@@ -42,6 +44,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Реєстрація
   if (url === '/register') {
     if (method === 'POST') {
       handleRegister(req, res);
@@ -52,6 +55,7 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Пошук
   if (url === '/search') {
     if (method === 'POST') {
       handleSearch(req, res);
@@ -62,18 +66,21 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  // Інвентар
   if (url.startsWith('/inventory')) {
     const urlPath = url.split('?')[0];
     const parts = urlPath.split('/').filter(p => p);
-    const id = parts.length > 1 ? parseInt(parts[1]) : NaN;
-    const action = parts[2];
-
-    if (parts.length === 1) {
+    
+    // Виправлено: обробка /inventory та /inventory/
+    if (parts.length === 0 || (parts.length === 1 && parts[0] === 'inventory')) {
       if (method === 'GET') {
         handleGetInventory(req, res);
         return;
       }
     }
+
+    const id = parts.length > 1 ? parseInt(parts[1]) : NaN;
+    const action = parts[2];
 
     if (!isNaN(id) && parts.length === 2) {
       if (method === 'GET') {
@@ -102,8 +109,9 @@ const server = http.createServer((req, res) => {
     }
   }
 
-  res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-  res.end('404 - Сторінку не знайдено\n');
+  // 404 для всіх інших запитів
+  res.writeHead(404, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify({ error: 'Сторінку не знайдено' }, null, 2));
 });
 
 server.listen(options.port, options.host, () => {
@@ -421,8 +429,7 @@ function getSearchFormHTML() {
 function handleRegisterForm(req, res) {
   const htmlForm = getRegisterFormHTML();
   res.writeHead(200, { 
-    'Content-Type': 'text/html; charset=utf-8',
-    'Content-Length': Buffer.byteLength(htmlForm, 'utf8')
+    'Content-Type': 'text/html; charset=utf-8'
   });
   res.end(htmlForm);
 }
@@ -430,8 +437,7 @@ function handleRegisterForm(req, res) {
 function handleSearchForm(req, res) {
   const htmlForm = getSearchFormHTML();
   res.writeHead(200, { 
-    'Content-Type': 'text/html; charset=utf-8',
-    'Content-Length': Buffer.byteLength(htmlForm, 'utf8')
+    'Content-Type': 'text/html; charset=utf-8'
   });
   res.end(htmlForm);
 }
