@@ -293,6 +293,12 @@ function handleRegister(req, res) {
       ? fields.description[0] 
       : fields.description;
 
+    if (!inventoryName) {
+      res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify({ error: 'Назва пристрою є обов\'язковою' }));
+      return;
+    }
+
     console.log('Назва: ' + inventoryName + ', Опис: ' + description);
 
     let photoPath = null;
@@ -322,8 +328,8 @@ function handleRegister(req, res) {
   });
 }
 
-function handleRegisterForm(req, res) {
-  const htmlForm = `
+function getRegisterFormHTML() {
+  return `
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -365,16 +371,10 @@ function handleRegisterForm(req, res) {
     </div>
 </body>
 </html>`;
-
-  res.writeHead(200, { 
-    'Content-Type': 'text/html; charset=utf-8',
-    'Content-Length': Buffer.byteLength(htmlForm, 'utf8')
-  });
-  res.end(htmlForm);
 }
 
-function handleSearchForm(req, res) {
-  const htmlForm = `
+function getSearchFormHTML() {
+  return `
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -416,7 +416,19 @@ function handleSearchForm(req, res) {
     </div>
 </body>
 </html>`;
+}
 
+function handleRegisterForm(req, res) {
+  const htmlForm = getRegisterFormHTML();
+  res.writeHead(200, { 
+    'Content-Type': 'text/html; charset=utf-8',
+    'Content-Length': Buffer.byteLength(htmlForm, 'utf8')
+  });
+  res.end(htmlForm);
+}
+
+function handleSearchForm(req, res) {
+  const htmlForm = getSearchFormHTML();
   res.writeHead(200, { 
     'Content-Type': 'text/html; charset=utf-8',
     'Content-Length': Buffer.byteLength(htmlForm, 'utf8')
@@ -559,28 +571,4 @@ function handleGetInventoryItemPhoto(req, res, id) {
     res.writeHead(500, { 'Content-Type': 'application/json; charset=utf-8' });
     res.end(JSON.stringify({ error: 'Помилка читання файлу' }));
   }
-}
-function handleRegisterForm(req, res) {
-  const filePath = path.join(__dirname, 'RegisterForm.html');
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Форма реєстрації не знайдена');
-      return;
-    }
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(data);
-  });
-}
-function handleSearchForm(req, res) {
-  const filePath = path.join(__dirname, 'SearchForm.html');
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Форма пошуку не знайдена');
-      return;
-    }
-    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
-    res.end(data);
-  });
 }
