@@ -589,3 +589,56 @@ function handleGetInventoryItemPhoto(req, res) {
     res.end('Помилка читання файлу\n');
   }
 } 
+function handleUpdateInventoryItem(req, res) {
+  const urlParts = req.url.split('/');
+  const id = parseInt(urlParts[2]);
+  
+  if (isNaN(id)) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Невірний ID\n');
+    return;
+  }
+  
+  const itemIndex = inventory.findIndex(item => item.id === id);
+  
+  if (itemIndex === -1) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Пристрій не знайдено\n');
+    return;
+  }
+
+  let body = '';
+  
+  req.on('data', chunk => {
+    body += chunk.toString();
+  });
+  
+  req.on('end', () => {
+    try {
+      const data = JSON.parse(body);
+      
+      // Оновлюємо ім'я, якщо присутнє
+      if (data.name && typeof data.name === 'string') {
+        inventory[itemIndex].name = data.name.trim();
+      }
+      
+      // Оновлюємо опис, якщо присутній
+      if (data.description && typeof data.description === 'string') {
+        inventory[itemIndex].description = data.description.trim();
+      }
+      
+      // Повертаємо оновлену річ з посиланням на фото
+      const updatedItem = {
+        ...inventory[itemIndex],
+        photo: inventory[itemIndex].photo ? `http://${options.host}:${options.port}${inventory[itemIndex].photo}` : null
+      };
+      
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(updatedItem));
+      
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Невірні дані JSON\n');
+    }
+  });
+}
