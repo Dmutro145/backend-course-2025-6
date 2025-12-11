@@ -34,12 +34,22 @@ const server = http.createServer((req, res) => {
   }
 
   // HTML форми
-  if (method === 'GET' && url === '/RegisterForm.html') { handleRegisterForm(req, res); return; }
-  if (method === 'GET' && url === '/SearchForm.html') { handleSearchForm(req, res); return; }
+  if (method === 'GET' && url === '/RegisterForm.html') { 
+    handleRegisterForm(req, res); 
+    return; 
+  }
+  
+  if (method === 'GET' && url === '/SearchForm.html') { 
+    handleSearchForm(req, res); 
+    return; 
+  }
 
   // POST /register
   if (url === '/register') {
-    if (method === 'POST') { handleRegister(req, res); return; }
+    if (method === 'POST') { 
+      handleRegister(req, res); 
+      return; 
+    }
     res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Method Not Allowed\n');
     return;
@@ -47,21 +57,30 @@ const server = http.createServer((req, res) => {
 
   // POST /search
   if (url === '/search') {
-    if (method === 'POST') { handleSearch(req, res); return; }
+    if (method === 'POST') { 
+      handleSearch(req, res); 
+      return; 
+    }
     res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Method Not Allowed\n');
     return;
   }
 
-  // /inventory і /inventory?...
+  // /inventory маршрути
   if (url.startsWith('/inventory')) {
     const urlParts = url.split('/');
     const id = parseInt(urlParts[2]);
 
     // /inventory/:id/photo
     if (!isNaN(id) && url.endsWith('/photo')) {
-      if (method === 'GET') { handleGetInventoryItemPhoto(req, res); return; }
-      if (method === 'PUT') { handleUpdateInventoryItemPhoto(req, res); return; }
+      if (method === 'GET') { 
+        handleGetInventoryItemPhoto(req, res); 
+        return; 
+      }
+      if (method === 'PUT') { 
+        handleUpdateInventoryItemPhoto(req, res); 
+        return; 
+      }
       res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Method Not Allowed\n');
       return;
@@ -69,30 +88,34 @@ const server = http.createServer((req, res) => {
 
     // /inventory/:id
     if (!isNaN(id)) {
-      if (method === 'GET') { handleGetInventoryItem(req, res); return; }
-      if (method === 'PUT') { handleUpdateInventoryItem(req, res); return; }
-      if (method === 'DELETE') { handleDeleteInventoryItem(req, res); return; }
+      if (method === 'GET') { 
+        handleGetInventoryItem(req, res); 
+        return; 
+      }
+      if (method === 'PUT') { 
+        handleUpdateInventoryItem(req, res); 
+        return; 
+      }
+      if (method === 'DELETE') { 
+        handleDeleteInventoryItem(req, res); 
+        return; 
+      }
       res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
       res.end('Method Not Allowed\n');
       return;
     }
 
- // /inventory (GET або POST)
-if (url === '/inventory' || url === '/inventory/' || url.startsWith('/inventory?')) {
-  if (method === 'GET') { 
-    console.log('Викликаємо handleGetInventory'); // ← Додайте для відладки
-    handleGetInventory(req, res); 
-    return; 
-  }
-  res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
-  res.end('Method Not Allowed\n');
-  return;
-}
-
-    // Необроблене
-    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Невірний запит\n');
-    return;
+    // /inventory (GET)
+    if (url === '/inventory' || url === '/inventory/') {
+      if (method === 'GET') { 
+        console.log('Викликаємо handleGetInventory');
+        handleGetInventory(req, res); 
+        return; 
+      }
+      res.writeHead(405, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Method Not Allowed\n');
+      return;
+    }
   }
 
   // Всі інші - 404
@@ -100,14 +123,12 @@ if (url === '/inventory' || url === '/inventory/' || url.startsWith('/inventory?
   res.end('Сторінку не знайдено\n');
 });
 
-
 server.listen(options.port, options.host, () => {
   console.log(`Сервер запущено на http://${options.host}:${options.port}`);
 });
 
-
 function handleGetInventory(req, res) {
-   console.log('handleGetInventory викликано!');
+  console.log('handleGetInventory викликано!');
   const inventoryWithLinks = inventory.map(item => ({
     id: item.id,
     name: item.name,
@@ -144,6 +165,57 @@ function handleGetInventoryItem(req, res) {
   
   res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
   res.end(JSON.stringify(itemWithPhoto));
+}
+
+function handleUpdateInventoryItem(req, res) {
+  const urlParts = req.url.split('/');
+  const id = parseInt(urlParts[2]);
+  
+  if (isNaN(id)) {
+    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Невірний ID\n');
+    return;
+  }
+  
+  const itemIndex = inventory.findIndex(item => item.id === id);
+  
+  if (itemIndex === -1) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('Пристрій не знайдено\n');
+    return;
+  }
+
+  let body = '';
+  
+  req.on('data', chunk => {
+    body += chunk.toString();
+  });
+  
+  req.on('end', () => {
+    try {
+      const data = JSON.parse(body);
+      
+      if (data.name && typeof data.name === 'string') {
+        inventory[itemIndex].name = data.name.trim();
+      }
+      
+      if (data.description && typeof data.description === 'string') {
+        inventory[itemIndex].description = data.description.trim();
+      }
+      
+      const updatedItem = {
+        ...inventory[itemIndex],
+        photo: inventory[itemIndex].photo ? `http://${options.host}:${options.port}${inventory[itemIndex].photo}` : null
+      };
+      
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(updatedItem));
+      
+    } catch (error) {
+      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Невірні дані JSON\n');
+    }
+  });
 }
 
 function handleUpdateInventoryItemPhoto(req, res) {
@@ -487,6 +559,7 @@ function handleSearch(req, res) {
     }
   });
 }
+
 function handleGetInventoryItemPhoto(req, res) {
   console.log('=== GET PHOTO HANDLER ===');
   const urlParts = req.url.split('/');
@@ -516,12 +589,10 @@ function handleGetInventoryItemPhoto(req, res) {
     return;
   }
 
-  // Шукаємо файл у cache
   console.log('Cache directory:', options.cache);
   const files = fs.readdirSync(options.cache);
   console.log('Files in cache:', files);
   
-  // Пошук файлу з різними розширеннями
   const possibleExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.jfif'];
   let foundFile = null;
   
@@ -533,7 +604,6 @@ function handleGetInventoryItemPhoto(req, res) {
     }
   }
   
-  // Або пошук за префіксом
   if (!foundFile) {
     const prefixFiles = files.filter(f => f.startsWith(`photo_${id}`));
     if (prefixFiles.length > 0) {
@@ -551,7 +621,6 @@ function handleGetInventoryItemPhoto(req, res) {
   console.log('Found file:', foundFile);
   const filePath = path.join(options.cache, foundFile);
 
-  // Визначаємо MIME-тип
   const ext = path.extname(foundFile).toLowerCase();
   console.log('File extension:', ext);
   
@@ -588,57 +657,4 @@ function handleGetInventoryItemPhoto(req, res) {
     res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Помилка читання файлу\n');
   }
-} 
-function handleUpdateInventoryItem(req, res) {
-  const urlParts = req.url.split('/');
-  const id = parseInt(urlParts[2]);
-  
-  if (isNaN(id)) {
-    res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Невірний ID\n');
-    return;
-  }
-  
-  const itemIndex = inventory.findIndex(item => item.id === id);
-  
-  if (itemIndex === -1) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Пристрій не знайдено\n');
-    return;
-  }
-
-  let body = '';
-  
-  req.on('data', chunk => {
-    body += chunk.toString();
-  });
-  
-  req.on('end', () => {
-    try {
-      const data = JSON.parse(body);
-      
-      // Оновлюємо ім'я, якщо присутнє
-      if (data.name && typeof data.name === 'string') {
-        inventory[itemIndex].name = data.name.trim();
-      }
-      
-      // Оновлюємо опис, якщо присутній
-      if (data.description && typeof data.description === 'string') {
-        inventory[itemIndex].description = data.description.trim();
-      }
-      
-      // Повертаємо оновлену річ з посиланням на фото
-      const updatedItem = {
-        ...inventory[itemIndex],
-        photo: inventory[itemIndex].photo ? `http://${options.host}:${options.port}${inventory[itemIndex].photo}` : null
-      };
-      
-      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify(updatedItem));
-      
-    } catch (error) {
-      res.writeHead(400, { 'Content-Type': 'text/plain; charset=utf-8' });
-      res.end('Невірні дані JSON\n');
-    }
-  });
 }
